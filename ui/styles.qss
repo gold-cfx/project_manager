@@ -1,0 +1,213 @@
+/* 科研项目管理系统 - QSS样式表 */
+
+/* 全局样式 */
+QWidget {
+    font-family: "Microsoft YaHei", "Arial", sans-serif;
+    font-size: 14px;
+    background-color: #f5f7fa;
+}
+
+/* 标题标签样式 */
+QLabel#titleLabel {
+    font-size: 20px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+/* 组框样式 */
+QGroupBox {
+    border: 1px solid #dcdde1;
+    border-radius: 6px;
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #ffffff;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px 0 5px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+/* 输入框样式 */
+QLineEdit, QDateEdit, QComboBox, QSpinBox, QDoubleSpinBox, QTextEdit {
+    border: 1px solid #dcdde1;
+    border-radius: 4px;
+    padding: 5px;
+    background-color: #ffffff;
+}
+
+QLineEdit:focus, QDateEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus, QTextEdit:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+/* 按钮样式 */
+QPushButton {
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    background-color: #3498db;
+    color: white;
+    font-weight: 500;
+}
+
+QPushButton:hover {
+    background-color: #2980b9;
+}
+
+QPushButton:pressed {
+    background-color: #2c3e50;
+}
+
+QPushButton:disabled {
+    background-color: #bdc3c7;
+    color: #ecf0f1;
+}
+
+/* 次要按钮 */
+QPushButton#secondaryBtn {
+    background-color: #95a5a6;
+}
+
+QPushButton#secondaryBtn:hover {
+    background-color: #7f8c8d;
+}
+
+/* 危险操作按钮 */
+QPushButton#dangerBtn {
+    background-color: #e74c3c;
+}
+
+QPushButton#dangerBtn:hover {
+    background-color: #c0392b;
+}
+
+/* 表格样式 */
+QTableWidget {
+    border: 1px solid #dcdde1;
+    border-radius: 4px;
+    background-color: #ffffff;
+    alternate-background-color: #f5f7fa;
+}
+
+QTableWidget::horizontalHeader {
+    background-color: #3498db;
+    color: white;
+    font-weight: bold;
+}
+
+QTableWidget::horizontalHeader::section {
+    padding: 6px;
+    border: 1px solid #2980b9;
+}
+
+QTableWidget::item {
+    padding: 5px;
+    border: 1px solid #dcdde1;
+}
+
+QTableWidget::item:selected {
+    background-color: #3498db;
+    color: white;
+}
+
+/* 侧边栏样式 */
+QFrame#sidebar {
+    background-color: #2c3e50;
+    color: white;
+}
+
+QListWidget#menuList {
+    background-color: transparent;
+    color: white;
+}
+
+QListWidget#menuList::item {
+    padding: 10px;
+    border-bottom: 1px solid #34495e;
+}
+
+QListWidget#menuList::item:selected {
+    background-color: #3498db;
+}
+
+QListWidget#menuList::item:hover {
+    background-color: #34495e;
+}
+
+/* 内容区域样式 */
+QFrame#contentArea {
+    background-color: #f5f7fa;
+    border-radius: 6px;
+    padding: 10px;
+}
+
+/* 状态栏样式 */
+QStatusBar {
+    background-color: #2c3e50;
+    color: white;
+    font-size: 12px;
+}
+
+/* 选项卡样式 */
+QTabWidget::tab-bar {
+    alignment: center;
+}
+
+QTabBar::tab {
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    padding: 6px 12px;
+    margin-right: 2px;
+}
+
+QTabBar::tab:selected {
+    background-color: #3498db;
+    color: white;
+}
+
+/* 卡片样式 */
+QFrame#card {
+    background-color: #ffffff;
+    border-radius: 6px;
+    border: 1px solid #dcdde1;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+}
+
+/* 提示标签样式 */
+QLabel#statusLabel {
+    font-size: 12px;
+    padding: 5px;
+}
+
+/* 分隔符样式 */
+QFrame#separator {
+    background-color: #dcdde1;
+    height: 1px;
+    margin: 10px 0;
+}
+
+/* 日历控件样式 */
+QCalendarWidget {
+    background-color: #ffffff;
+    border: 1px solid #dcdde1;
+    border-radius: 4px;
+}
+
+QCalendarWidget QToolButton {
+    background-color: #3498db;
+    color: white;
+}
+
+QCalendarWidget QToolButton:hover {
+    background-color: #2980b9;
+}
+
+QCalendarWidget QWidget#qt_calendar_navigationbar {
+    background-color: #3498db;
+    color: white;
+}
