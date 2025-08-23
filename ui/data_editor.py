@@ -8,23 +8,30 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (
     QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel,
     QLineEdit, QDateEdit, QComboBox, QDoubleSpinBox, QPushButton, QMessageBox, QGroupBox, QTableWidget,
-    QTableWidgetItem, QDialog, QDialogButtonBox
+    QTableWidgetItem, QDialog, QDialogButtonBox, QListWidget, QFileDialog, QListWidgetItem
 )
-
+import os
 from logic.project_logic import ProjectLogic
 from logic.project_result_logic import ProjectResultLogic
+from logic.project_result_attachment_logic import ProjectResultAttachmentLogic
 from utils.validator import Validator
 
 
 class ResultDialog(QDialog):
     """成果添加/编辑弹窗"""
 
-    def __init__(self, parent=None, result_data=None):
+    def __init__(self, parent=None, result_data=None, project_result_id=None):
         super().__init__(parent)
         self.setWindowTitle('添加成果')
         self.setModal(True)
         self.result_data = result_data or {}
+        self.project_result_id = project_result_id
+        self.attachment_logic = ProjectResultAttachmentLogic()
+        self.attachments_to_delete = []
+        self.attachments_to_add = []
         self.init_ui()
+        if self.project_result_id:
+            self.load_attachments()
 
     def init_ui(self):
         # 设置弹窗宽度
@@ -54,6 +61,28 @@ class ResultDialog(QDialog):
 
         main_layout.addLayout(form_layout)
 
+        # 附件管理
+        attachment_group = QGroupBox('附件管理')
+        attachment_layout = QVBoxLayout()
+
+        self.attachment_list = QListWidget()
+        attachment_layout.addWidget(self.attachment_list)
+
+        attachment_btn_layout = QHBoxLayout()
+        add_attachment_btn = QPushButton('添加附件')
+        add_attachment_btn.clicked.connect(self.add_attachment)
+        remove_attachment_btn = QPushButton('删除附件')
+        remove_attachment_btn.clicked.connect(self.remove_attachment)
+        download_attachment_btn = QPushButton('下载附件')
+        download_attachment_btn.clicked.connect(self.download_attachment)
+        attachment_btn_layout.addWidget(add_attachment_btn)
+        attachment_btn_layout.addWidget(remove_attachment_btn)
+        attachment_btn_layout.addWidget(download_attachment_btn)
+        attachment_layout.addLayout(attachment_btn_layout)
+
+        attachment_group.setLayout(attachment_layout)
+        main_layout.addWidget(attachment_group)
+
         # 添加按钮
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self.accept)
@@ -74,12 +103,73 @@ class ResultDialog(QDialog):
                 if date.isValid():
                     self.result_date_edit.setDate(date)
 
+    def load_attachments(self):
+        self.attachment_list.clear()
+        attachments = self.attachment_logic.get_attachments_by_result(self.project_result_id)
+        for attachment in attachments:
+            item = QListWidgetItem(attachment['file_name'])
+            item.setData(Qt.UserRole, attachment)
+            self.attachment_list.addItem(item)
+
+    def add_attachment(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, '选择附件', '', 'All Files (*)')
+        if file_path:
+            file_name = os.path.basename(file_path)
+            item = QListWidgetItem(file_name)
+            item.setData(Qt.UserRole, {'file_path': file_path, 'is_new': True})
+            self.attachment_list.addItem(item)
+            self.attachments_to_add.append(file_path)
+
+    def remove_attachment(self):
+        selected_item = self.attachment_list.currentItem()
+        if not selected_item:
+            QMessageBox.warning(self, '提示', '请选择要删除的附件')
+            return
+
+        attachment_data = selected_item.data(Qt.UserRole)
+        # 如果是已存在的附件，将其ID添加到待删除列表
+        if 'id' in attachment_data and not attachment_data.get('is_new', False):
+            self.attachments_to_delete.append(attachment_data['id'])
+        # 如果是新添加的附件，从待添加列表中移除
+        elif attachment_data.get('is_new', False) and 'file_path' in attachment_data:
+            if attachment_data['file_path'] in self.attachments_to_add:
+                self.attachments_to_add.remove(attachment_data['file_path'])
+
+        self.attachment_list.takeItem(self.attachment_list.row(selected_item))
+
+    def download_attachment(self):
+        selected_item = self.attachment_list.currentItem()
+        if not selected_item:
+            QMessageBox.warning(self, '提示', '请选择要下载的附件')
+            return
+
+        attachment_data = selected_item.data(Qt.UserRole)
+        if attachment_data.get('is_new', False):
+            QMessageBox.information(self, '提示', '新添加的附件尚未保存，无法下载')
+            return
+
+        file_path = attachment_data.get('file_path')
+        if not file_path or not os.path.exists(file_path):
+            QMessageBox.warning(self, '错误', '附件文件不存在')
+            return
+
+        save_path, _ = QFileDialog.getSaveFileName(self, '保存附件', attachment_data['file_name'])
+        if save_path:
+            try:
+                import shutil
+                shutil.copy2(file_path, save_path)
+                QMessageBox.information(self, '成功', '附件下载成功')
+            except Exception as e:
+                QMessageBox.warning(self, '错误', f'下载失败: {e}')
+
     def get_result_data(self):
         """获取成果数据"""
         return {
             'type': self.result_type_combo.currentText(),
             'name': self.result_name_edit.text(),
-            'date': self.result_date_edit.date().toString('yyyy-MM-dd')
+            'date': self.result_date_edit.date().toString('yyyy-MM-dd'),
+            'attachments_to_add': self.attachments_to_add,
+            'attachments_to_delete': self.attachments_to_delete
         }
 
     def accept(self):
@@ -96,6 +186,7 @@ class BaseProjectEditor(object):
 
     def __init__(self, project_id=None):
         self.project_logic = ProjectLogic()
+        self.attachment_logic = ProjectResultAttachmentLogic()
         self.project_id = project_id
         self.original_project_name = None  # 初始化原始项目名称
         self.widget = None  # 存储UI组件的引用
@@ -123,6 +214,8 @@ class BaseProjectEditor(object):
 
         # 项目基本信息组
         basic_info_group = QGroupBox('项目基本信息')
+        # 创建水平布局（用于并排放置两个 QFormLayout）
+        self.h_layout = QHBoxLayout()
         basic_info_layout = QFormLayout()
 
         # 项目名称
@@ -360,8 +453,13 @@ class BaseProjectEditor(object):
             result_data = {
                 'type': result.type,
                 'name': result.name,
-                'date': date_str
+                'date': date_str,
+                'id': result.id, # 存储成果ID
+                'attachments': self.attachment_logic.get_attachments_by_result(result.id) # 加载附件
             }
+            if not hasattr(self, 'results_data'):
+                self.results_data = []
+            self.results_data.append(result_data)
             self.add_result_to_table(result_data)
 
     def on_project_name_changed(self):
@@ -413,7 +511,16 @@ class BaseProjectEditor(object):
         dialog = ResultDialog(self.widget)
         if dialog.exec_() == QDialog.Accepted:
             result_data = dialog.get_result_data()
+            # 确保 result_data 包含 attachments_to_add 和 attachments_to_delete 字段
+            if 'attachments_to_add' not in result_data:
+                result_data['attachments_to_add'] = []
+            if 'attachments_to_delete' not in result_data:
+                result_data['attachments_to_delete'] = []
+
             self.add_result_to_table(result_data)
+            if not hasattr(self, 'results_data'):
+                self.results_data = []
+            self.results_data.append(result_data)
 
     def edit_result(self):
         # 编辑选中的成果
@@ -423,18 +530,39 @@ class BaseProjectEditor(object):
             return
 
         row = selected_rows[0].row()
-        result_data = {
-            'type': self.result_table.item(row, 0).text(),
-            'name': self.result_table.item(row, 1).text(),
-            'date': self.result_table.item(row, 2).text()
-        }
+        result_id = self.result_table.item(row, 0).data(Qt.UserRole)
+        
+        # 从 self.results_data 中找到对应的 result_data
+        result_data = next((r for r in getattr(self, 'results_data', []) if r.get('id') == result_id), None)
 
-        dialog = ResultDialog(self.widget, result_data)
-        if dialog.exec_() == QDialog.Accepted:
-            new_result_data = dialog.get_result_data()
-            self.result_table.setItem(row, 0, QTableWidgetItem(new_result_data['type']))
-            self.result_table.setItem(row, 1, QTableWidgetItem(new_result_data['name']))
-            self.result_table.setItem(row, 2, QTableWidgetItem(new_result_data['date']))
+        if result_data:
+            dialog = ResultDialog(self.widget, result_data=result_data, project_result_id=result_id)
+            if dialog.exec_() == QDialog.Accepted:
+                updated_result_data = dialog.get_result_data()
+                # 更新 self.results_data 中的对应项
+                for i, r in enumerate(getattr(self, 'results_data', [])):
+                    if r.get('id') == result_id:
+                        # 合并 attachments_to_add
+                        existing_attachments_to_add = set(self.results_data[i].get('attachments_to_add', []))
+                        new_attachments_to_add = set(updated_result_data.get('attachments_to_add', []))
+                        self.results_data[i]['attachments_to_add'] = list(existing_attachments_to_add.union(new_attachments_to_add))
+
+                        # 合并 attachments_to_delete
+                        existing_attachments_to_delete = set(self.results_data[i].get('attachments_to_delete', []))
+                        new_attachments_to_delete = set(updated_result_data.get('attachments_to_delete', []))
+                        self.results_data[i]['attachments_to_delete'] = list(existing_attachments_to_delete.union(new_attachments_to_delete))
+
+                        # 更新其他字段
+                        self.results_data[i]['type'] = updated_result_data['type']
+                        self.results_data[i]['name'] = updated_result_data['name']
+                        self.results_data[i]['date'] = updated_result_data['date']
+                        break
+                # Update table items directly
+                self.result_table.setItem(row, 0, QTableWidgetItem(updated_result_data['type']))
+                self.result_table.setItem(row, 1, QTableWidgetItem(updated_result_data['name']))
+                self.result_table.setItem(row, 2, QTableWidgetItem(updated_result_data['date']))
+        else:
+            QMessageBox.warning(self.widget, '错误', '未找到对应的成果数据')
 
     def delete_selected_result(self):
         # 删除选中的成果
@@ -447,8 +575,21 @@ class BaseProjectEditor(object):
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
             # 从下往上删除，避免索引变化问题
+            # 从下往上删除，避免索引变化问题
             for index in sorted(selected_rows, reverse=True):
-                self.result_table.removeRow(index.row())
+                row = index.row()
+                # 获取成果ID
+                result_id = self.result_table.item(row, 0).data(Qt.UserRole)
+                if result_id:
+                    if not hasattr(self, 'results_to_delete_ids'):
+                        self.results_to_delete_ids = []
+                    self.results_to_delete_ids.append(result_id)
+
+                # 从 self.results_data 中移除对应的成果数据
+                if hasattr(self, 'results_data'):
+                    self.results_data = [r for r in self.results_data if r.get('id') != result_id]
+
+                self.result_table.removeRow(row)
 
     def add_result_to_table(self, result_data):
         """将成果数据添加到表格"""
@@ -456,7 +597,10 @@ class BaseProjectEditor(object):
         self.result_table.insertRow(row_count)
 
         # 成果类型
-        self.result_table.setItem(row_count, 0, QTableWidgetItem(result_data['type']))
+        type_item = QTableWidgetItem(result_data['type'])
+        if result_data.get('id'):
+            type_item.setData(Qt.UserRole, result_data['id'])
+        self.result_table.setItem(row_count, 0, type_item)
 
         # 成果名称
         self.result_table.setItem(row_count, 1, QTableWidgetItem(result_data['name']))
@@ -466,30 +610,8 @@ class BaseProjectEditor(object):
 
     def collect_result_data(self):
         # 收集成果数据
-        result_data = []
-        for row in range(self.result_table.rowCount()):
-            result_type = self.result_table.item(row, 0).text()
-            result_name = self.result_table.item(row, 1).text()
-            result_date = self.result_table.item(row, 2).text()
-
-            if result_name:
-                # 确保日期格式正确
-                try:
-                    from datetime import datetime
-                    # 尝试解析日期，如果失败则使用当前日期
-                    date_obj = datetime.strptime(result_date, '%Y-%m-%d').date()
-                    result_date = date_obj.isoformat()
-                except ValueError:
-                    from datetime import date
-                    result_date = date.today().isoformat()
-                
-                result_data.append({
-                    'type': result_type,
-                    'name': result_name,
-                    'date': result_date,
-                    'project_id': self.project_id or 0  # 确保有project_id
-                })
-        return result_data
+        # self.results_data 在每次添加或编辑成果后被更新
+        return getattr(self, 'results_data', [])
 
     def validate_form(self):
         # 验证表单数据
@@ -615,10 +737,73 @@ class BaseProjectEditor(object):
 
             # 如果项目保存成功，保存项目成果
             if success and project_id:
-                # 收集成果数据并保存
-                result_data = self.collect_result_data()
-                # 使用项目成果逻辑类批量保存成果
-                self.project_result_logic.batch_create_project_results(project_id, result_data)
+                # 收集当前UI上的成果数据
+                current_results_on_ui = self.collect_result_data()
+
+                # 用于存储已保存的成果，以便后续处理附件
+                processed_results = []
+
+                # 遍历当前UI上的成果数据，区分新增和更新
+                for result_data in current_results_on_ui:
+                    result_id = result_data.get('id')
+                    attachments_to_add = result_data.get('attachments_to_add', [])
+                    attachments_to_delete = result_data.get('attachments_to_delete', [])
+
+                    if result_id:
+                        # 更新现有成果
+                        from models.project_result import ProjectResultUpdate
+                        update_data = ProjectResultUpdate(
+                            type=result_data['type'],
+                            name=result_data['name'],
+                            date=result_data['date']
+                        )
+                        self.project_result_logic.update_project_result(result_id, update_data)
+                        processed_results.append({'id': result_id, **result_data})
+                    else:
+                        # 创建新成果
+                        from models.project_result import ProjectResultCreate
+                        create_data = ProjectResultCreate(
+                            project_id=project_id,
+                            type=result_data['type'],
+                            name=result_data['name'],
+                            date=result_data['date']
+                        )
+                        new_result_id = self.project_result_logic.create_project_result(create_data)
+                        if new_result_id > 0:
+                            result_data['id'] = new_result_id # 更新ID以便后续附件处理
+                            processed_results.append({'id': new_result_id, **result_data})
+                        else:
+                            QMessageBox.warning(self.widget, '保存失败', f'创建成果 {result_data["name"]} 失败')
+                            continue
+
+                    # 处理当前成果的附件
+                    # 删除附件
+                    for att_id in attachments_to_delete:
+                        self.attachment_logic.delete_attachment(att_id)
+                    # 添加附件
+                    for file_path in attachments_to_add:
+                        self.attachment_logic.create_attachment(result_data['id'], file_path)
+
+                    # 清空已处理的附件列表，防止重复处理或影响其他成果
+                    # 并且更新 self.results_data 中对应成果的附件列表
+                    for i, r in enumerate(self.results_data):
+                        if r.get('id') == result_data['id']:
+                            # 重新加载附件列表，确保是最新的
+                            self.results_data[i]['attachments'] = self.attachment_logic.get_attachments_by_result(result_data['id'])
+                            self.results_data[i]['attachments_to_add'] = []
+                            self.results_data[i]['attachments_to_delete'] = []
+                            break
+
+                ## 处理删除的成果及其附件
+                if hasattr(self, 'results_to_delete_ids') and self.results_to_delete_ids:
+                    for result_id_to_delete in self.results_to_delete_ids:
+                        # 删除成果的所有附件
+                        self.attachment_logic.delete_result_attachments(result_id_to_delete)
+                        # 删除成果本身
+                        self.project_result_logic.delete_project_result(result_id_to_delete)
+                    self.results_to_delete_ids = [] # 清空列表
+
+
 
                 QMessageBox.information(self.widget, '保存成功', '项目信息已成功保存')
                 if hasattr(self, 'on_save_success') and callable(self.on_save_success):

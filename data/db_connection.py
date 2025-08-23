@@ -146,6 +146,19 @@ def init_database():
         """
         cursor.execute(create_project_result_table)
 
+        # 创建项目成果附件表
+        create_project_result_attachment_table = """
+            CREATE TABLE IF NOT EXISTS project_result_attachment (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                project_result_id INT NOT NULL,
+                file_name VARCHAR(255) NOT NULL,
+                file_path VARCHAR(255) NOT NULL,
+                upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (project_result_id) REFERENCES project_result(id) ON DELETE CASCADE
+            )
+        """
+        cursor.execute(create_project_result_attachment_table)
+
         # 创建提醒表
         create_reminders_table = """
             CREATE TABLE IF NOT EXISTS reminders (

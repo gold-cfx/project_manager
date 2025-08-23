@@ -23,7 +23,7 @@ class MainWindow(QMainWindow):
     def init_ui(self):
         # 设置窗口标题和大小
         self.setWindowTitle('科研项目管理系统')
-        self.setMinimumSize(1366, 880)
+        self.setMinimumSize(1366, 768)
 
         # 创建中心部件
         self.central_widget = QWidget()

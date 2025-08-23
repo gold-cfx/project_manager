@@ -85,7 +85,7 @@ class ProjectResultLogic:
         return self.project_result_dao.get_by_project_id(project_id)
     
     @log_operation("批量创建项目成果")
-    def batch_create_project_results(self, project_id: int, results_data: List[Dict[str, Any]]) -> bool:
+    def batch_create_project_results(self, project_id: int, results_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """批量创建项目成果
         
         Args:
@@ -93,13 +93,13 @@ class ProjectResultLogic:
             results_data: 项目成果数据列表，每个元素包含type、name和date字段
             
         Returns:
-            bool: 是否全部创建成功
+            List[Dict[str, Any]]: 成功创建的项目成果列表，包含id和原始数据
         """
         # 先删除该项目的所有成果
         self.project_result_dao.delete_by_project_id(project_id)
         
         # 创建新的成果
-        success = True
+        saved_results = []
         for result_data in results_data:
             # 确保包含project_id
             result_data['project_id'] = project_id
@@ -108,10 +108,13 @@ class ProjectResultLogic:
                 # 创建成果
                 create_data = ProjectResultCreate(**result_data)
                 result_id = self.create_project_result(create_data)
-                if result_id <= 0:
-                    success = False
+                if result_id > 0:
+                    # 将新创建的成果ID添加到结果数据中
+                    result_data['id'] = result_id
+                    saved_results.append(result_data)
+                else:
+                    print(f"创建项目成果失败，ID返回0或负数: {result_data.get('name')}")
             except Exception as e:
                 print(f"创建项目成果失败: {e}")
-                success = False
         
-        return success
+        return saved_results
