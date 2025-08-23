@@ -87,7 +87,7 @@ class ProjectDAO:
             """
             
             cursor.execute(sql, tuple(values))
-            return cursor.rowcount > 0
+            return cursor.rowcount >= 0
 
         result = with_db_connection(operation, cursor_type=Cursor)
         return result if result is not None else False

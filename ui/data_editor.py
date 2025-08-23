@@ -37,7 +37,9 @@ class ResultDialog(QDialog):
 
         # 成果类型
         self.result_type_combo = QComboBox()
-        self.result_type_combo.addItems(['论文', '专利', '获奖', '软件著作权', '其他'])
+        # 使用 ProjectResultType 枚举中定义的值
+        from models.project_result import ProjectResultType
+        self.result_type_combo.addItems([result_type.value for result_type in ProjectResultType])
         form_layout.addRow('成果类型 *', self.result_type_combo)
 
         # 成果名称
@@ -350,10 +352,15 @@ class BaseProjectEditor(object):
         
         # 填充成果表格
         for result in project_results:
+            # 确保日期格式正确
+            date_str = result.date
+            if hasattr(result.date, 'strftime'):
+                date_str = result.date.strftime('%Y-%m-%d')
+                
             result_data = {
                 'type': result.type,
                 'name': result.name,
-                'date': result.date.strftime('%Y-%m-%d')
+                'date': date_str
             }
             self.add_result_to_table(result_data)
 
@@ -466,10 +473,21 @@ class BaseProjectEditor(object):
             result_date = self.result_table.item(row, 2).text()
 
             if result_name:
+                # 确保日期格式正确
+                try:
+                    from datetime import datetime
+                    # 尝试解析日期，如果失败则使用当前日期
+                    date_obj = datetime.strptime(result_date, '%Y-%m-%d').date()
+                    result_date = date_obj.isoformat()
+                except ValueError:
+                    from datetime import date
+                    result_date = date.today().isoformat()
+                
                 result_data.append({
                     'type': result_type,
                     'name': result_name,
-                    'date': result_date
+                    'date': result_date,
+                    'project_id': self.project_id or 0  # 确保有project_id
                 })
         return result_data
 
