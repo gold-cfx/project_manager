@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (
 )
 
 from logic.project_logic import ProjectLogic
+from logic.project_result_logic import ProjectResultLogic
 from utils.validator import Validator
 
 
@@ -96,6 +97,7 @@ class BaseProjectEditor(object):
         self.project_id = project_id
         self.original_project_name = None  # 初始化原始项目名称
         self.widget = None  # 存储UI组件的引用
+        self.project_result_logic = ProjectResultLogic()
 
         print(f'创建BaseProjectEditor实例，项目ID: {project_id}')
 
@@ -154,7 +156,9 @@ class BaseProjectEditor(object):
 
         # 项目级别
         self.level_combo = QComboBox()
-        self.level_combo.addItems(['国家级', '省部级', '市级', '厅局级'])        
+        # 使用 ProjectLevel 枚举中定义的值
+        from models.project import ProjectLevel
+        self.level_combo.addItems([level.value for level in ProjectLevel])        
         basic_info_layout.addRow('项目级别 *', self.level_combo)
 
         # 资助经费（万元）
@@ -192,7 +196,9 @@ class BaseProjectEditor(object):
 
         # 项目状态
         self.status_combo = QComboBox()
-        self.status_combo.addItems(['在研', '延期', '结题'])        
+        # 使用 ProjectStatus 枚举中定义的值
+        from models.project import ProjectStatus
+        self.status_combo.addItems([status.value for status in ProjectStatus])        
         basic_info_layout.addRow('项目状态 *', self.status_combo)
 
         # 项目持续时间
@@ -271,59 +277,85 @@ class BaseProjectEditor(object):
             return
 
         # 保存原始项目名称
-        self.original_project_name = project['project_name']
+        self.original_project_name = project.project_name
 
         # 填充基本信息
-        self.project_name_edit.setText(project['project_name'])
-        self.leader_edit.setText(project['leader'])
-        self.department_edit.setText(project.get('department', ''))
-        self.phone_edit.setText(project['phone'])
+        self.project_name_edit.setText(project.project_name)
+        self.leader_edit.setText(project.leader)
+        self.department_edit.setText(project.department if hasattr(project, 'department') else '')
+        self.phone_edit.setText(project.phone)
         
         # 设置项目来源
-        source_index = self.source_combo.findText(project.get('project_source', ''))
+        source_index = self.source_combo.findText(project.project_source if hasattr(project, 'project_source') else '')
         if source_index >= 0:
             self.source_combo.setCurrentIndex(source_index)
         
         # 设置项目类型
-        type_index = self.type_combo.findText(project.get('project_type', ''))
+        type_index = self.type_combo.findText(project.project_type if hasattr(project, 'project_type') else '')
         if type_index >= 0:
             self.type_combo.setCurrentIndex(type_index)
         
         # 设置立项年度和项目编号
-        self.approval_year_edit.setText(project.get('approval_year', ''))
-        self.project_code_edit.setText(project.get('project_number', ''))
+        self.approval_year_edit.setText(project.approval_year if hasattr(project, 'approval_year') else '')
+        self.project_code_edit.setText(project.project_number if hasattr(project, 'project_number') else '')
 
         # 设置日期
-        start_date = QDate.fromString(project['start_date'], 'yyyy-MM-dd')
+        if isinstance(project.start_date, str):
+            start_date = QDate.fromString(project.start_date, 'yyyy-MM-dd')
+        else:
+            # 如果是 datetime.date 对象，直接转换为 QDate
+            start_date = QDate(project.start_date.year, project.start_date.month, project.start_date.day)
         if start_date.isValid():
             self.start_date_edit.setDate(start_date)
 
-        end_date = QDate.fromString(project['end_date'], 'yyyy-MM-dd')
+        if isinstance(project.end_date, str):
+            end_date = QDate.fromString(project.end_date, 'yyyy-MM-dd')
+        else:
+            # 如果是 datetime.date 对象，直接转换为 QDate
+            end_date = QDate(project.end_date.year, project.end_date.month, project.end_date.day)
         if end_date.isValid():
             self.end_date_edit.setDate(end_date)
 
         # 设置资助信息
-        funding_unit = project['funding_unit']
+        funding_unit = project.funding_unit
         self.funding_unit_edit.setText(funding_unit)
 
-        level_index = self.level_combo.findText(project['level'])
+        level_index = self.level_combo.findText(project.level)
         if level_index >= 0:
             self.level_combo.setCurrentIndex(level_index)
 
-        self.funding_amount_edit.setValue(float(project['funding_amount']))
+        self.funding_amount_edit.setValue(float(project.funding_amount))
         # 已移除货币单位字段
 
-        status_index = self.status_combo.findText(project['status'])
+        status_index = self.status_combo.findText(project.status)
         if status_index >= 0:
             self.status_combo.setCurrentIndex(status_index)
 
         # 加载成果数据
-        if 'result' in project and project['result']:
-            for result in project['result']:
-                self.add_result_to_table(result)
+        self.load_project_results()
 
         # 更新持续时间
         self.on_date_changed()
+        
+    def load_project_results(self):
+        """加载项目成果数据"""
+        if not self.project_id:
+            return
+            
+        # 清空成果表格
+        self.result_table.setRowCount(0)
+        
+        # 获取项目成果
+        project_results = self.project_result_logic.get_project_results_by_project_id(self.project_id)
+        
+        # 填充成果表格
+        for result in project_results:
+            result_data = {
+                'type': result.type,
+                'name': result.name,
+                'date': result.date.strftime('%Y-%m-%d')
+            }
+            self.add_result_to_table(result_data)
 
     def on_project_name_changed(self):
         # 项目名称实时校验
@@ -518,7 +550,7 @@ class BaseProjectEditor(object):
         return True
 
     def collect_form_data(self):
-        # 收集表单数据
+        # 收集表单数据，与Pydantic模型兼容
         data = {
             'project_name': self.project_name_edit.text(),
             'leader': self.leader_edit.text(),
@@ -533,8 +565,8 @@ class BaseProjectEditor(object):
             'project_number': self.project_code_edit.text(),
             'start_date': self.start_date_edit.date().toString('yyyy-MM-dd'),
             'end_date': self.end_date_edit.date().toString('yyyy-MM-dd'),
-            'status': self.status_combo.currentText(),
-            'result': self.collect_result_data()
+            'status': self.status_combo.currentText()
+            # 'result': self.collect_result_data()
         }
 
         # 如果是编辑模式，添加项目ID
@@ -548,15 +580,28 @@ class BaseProjectEditor(object):
         if self.validate_form():
             project_data = self.collect_form_data()
             success = False
+            project_id = None
 
             if self.project_id:
                 # 更新项目
-                success = self.project_logic.update_project(project_data)
+                from models.project import ProjectUpdate
+                project_update = ProjectUpdate(**project_data)
+                success = self.project_logic.update_project(self.project_id, project_update)
+                project_id = self.project_id
             else:
                 # 新建项目
-                success = self.project_logic.save_project(project_data)
+                from models.project import ProjectCreate
+                project_create = ProjectCreate(**project_data)
+                project_id = self.project_logic.create_project(project_create)
+                success = project_id > 0
 
-            if success:
+            # 如果项目保存成功，保存项目成果
+            if success and project_id:
+                # 收集成果数据并保存
+                result_data = self.collect_result_data()
+                # 使用项目成果逻辑类批量保存成果
+                self.project_result_logic.batch_create_project_results(project_id, result_data)
+
                 QMessageBox.information(self.widget, '保存成功', '项目信息已成功保存')
                 if hasattr(self, 'on_save_success') and callable(self.on_save_success):
                     self.on_save_success()

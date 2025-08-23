@@ -1,173 +1,172 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-科研项目管理系统 - 提醒业务逻辑"""
+科研项目管理系统 - 提醒业务逻辑
+"""
 from datetime import datetime, timedelta
+from typing import List, Optional, Dict, Any, Union
 
-from data.db_connection import with_db_connection
+from data.reminder_dao import ReminderDAO
+from data.project_dao import ProjectDAO
+from models.reminder import Reminder, ReminderCreate, ReminderUpdate, ReminderStatus
+from utils.decorators import validate_model_data, log_operation
 
 
 class ReminderLogic:
+    """提醒业务逻辑类"""
+    
     def __init__(self):
-        pass
-
-    def add_reminder(self, reminder_data):
-        """添加提醒"""
-
-        def operation(cursor):
-            # 获取项目结束日期
-            project_id = reminder_data['project_id']
-            project_sql = "SELECT end_date FROM projects WHERE id = %s"
-            cursor.execute(project_sql, (project_id,))
-            project = cursor.fetchone()
-            if not project:
-                return False
-
-            end_date = project['end_date']
-            days_before = reminder_data['days_before']
-
-            # 计算提醒日期
-            if str(end_date) == str:
-                end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
-            else:
-                end_date_obj = end_date
-            reminder_date = end_date_obj - timedelta(days=days_before)
-
-            # 插入提醒信息
-            reminder_sql = """
-                INSERT INTO reminders (
-                    project_id, project_name, reminder_type, days_before,
-                    reminder_way, content, due_date, status, create_time
-                ) VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, NOW()
-                )
-            """
-            reminder_params = (
-                project_id,
-                reminder_data['project_name'],
-                reminder_data['reminder_type'],
-                days_before,
-                reminder_data['reminder_way'],
-                reminder_data['content'],
-                reminder_date.strftime('%Y-%m-%d'),
-                '未读'
-            )
-            cursor.execute(reminder_sql, reminder_params)
-
-            return True
-
-        result = with_db_connection(operation)
-        return result if result is not None else False
-
-    def get_all_reminders(self):
-        """获取所有提醒"""
-
-        def operation(cursor):
-            sql = """
-                SELECT
-                    id, project_id, project_name, reminder_type, days_before,
-                    reminder_way, content, due_date, status, create_time
-                FROM reminders
-                ORDER BY due_date ASC
-            """
-            cursor.execute(sql)
-            return cursor.fetchall()
-
-        result = with_db_connection(operation)
-        return result if result is not None else []
-
-    def get_reminder_by_id(self, reminder_id):
-        """根据ID获取提醒"""
-
-        def operation(cursor):
-            sql = "SELECT * FROM reminders WHERE id = %s"
-            cursor.execute(sql, (reminder_id,))
-            return cursor.fetchone()
-
-        result = with_db_connection(operation)
-        return result if result is not None else None
-
-    def update_reminder(self, reminder_data):
-        """更新提醒"""
-
-        def operation(cursor):
-            # 获取项目结束日期
-            project_id = reminder_data['project_id']
-            project_sql = "SELECT end_date FROM projects WHERE id = %s"
-            cursor.execute(project_sql, (project_id,))
-            project = cursor.fetchone()
-            if not project:
-                return False
-
-            end_date = project['end_date']
-            days_before = reminder_data['days_before']
-
-            # 计算提醒日期
-            if str(end_date) == str:
-                end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
-            else:
-                end_date_obj = end_date
-            reminder_date = end_date_obj - timedelta(days=days_before)
-            # 更新提醒信息
-            reminder_sql = """
-                UPDATE reminders SET
-                    project_name = %s, reminder_type = %s, days_before = %s,
-                    reminder_way = %s, content = %s, due_date = %s, status = %s
-                WHERE id = %s
-            """
-            reminder_params = (
-                reminder_data['project_name'],
-                reminder_data['reminder_type'],
-                days_before,
-                reminder_data['reminder_way'],
-                reminder_data['content'],
-                reminder_date.strftime('%Y-%m-%d'),
-                "未读",
-                reminder_data['id']
-            )
-            cursor.execute(reminder_sql, reminder_params)
-
-            return True
-
-        result = with_db_connection(operation)
-        return result if result is not None else False
-
-    def delete_reminder(self, reminder_id):
-        """删除提醒"""
-
-        def operation(cursor):
-            sql = "DELETE FROM reminders WHERE id = %s"
-            cursor.execute(sql, (reminder_id,))
-
-            return True
-
-        result = with_db_connection(operation)
-        return result if result is not None else False
-
-    def mark_reminder_as_read(self, reminder_id):
-        """标记提醒为已读"""
-
-        def operation(cursor):
-            sql = "UPDATE reminders SET status = '已读' WHERE id = %s"
-            cursor.execute(sql, (reminder_id,))
-
-            return True
-
-        result = with_db_connection(operation)
-        return result if result is not None else False
-
-    def check_due_reminders(self):
-        """检查到期提醒"""
-
-        def operation(cursor):
-            today = datetime.now().strftime('%Y-%m-%d')
-
-            sql = """
-                SELECT * FROM reminders
-                WHERE due_date <= %s AND status = '未读'
-            """
-            cursor.execute(sql, (today,))
-            return cursor.fetchall()
-
-        result = with_db_connection(operation)
-        return result if result is not None else []
+        self.reminder_dao = ReminderDAO()
+        self.project_dao = ProjectDAO()
+    
+    @validate_model_data(ReminderCreate)
+    @log_operation("创建提醒")
+    def create_reminder(self, reminder_data: ReminderCreate) -> int:
+        """创建新提醒
+        
+        Args:
+            reminder_data: 提醒数据，ReminderCreate模型实例
+            
+        Returns:
+            int: 新创建的提醒ID，失败返回-1
+        """
+        # 获取项目结束日期
+        project = self.project_dao.get_by_id(reminder_data.project_id)
+        if not project:
+            raise ValueError(f"项目ID {reminder_data.project_id} 不存在")
+        
+        # 计算提醒日期
+        end_date = project.end_date
+        days_before = reminder_data.days_before
+        
+        # 如果end_date是字符串，转换为日期对象
+        if isinstance(end_date, str):
+            end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
+        else:
+            end_date_obj = end_date
+            
+        reminder_date = end_date_obj - timedelta(days=days_before)
+        
+        # 设置提醒日期
+        reminder_data_dict = reminder_data.dict()
+        reminder_data_dict['due_date'] = reminder_date.strftime('%Y-%m-%d')
+        reminder_data_dict['status'] = ReminderStatus.UNREAD
+        
+        # 创建提醒
+        updated_reminder_data = ReminderCreate(**reminder_data_dict)
+        return self.reminder_dao.insert(updated_reminder_data)
+    
+    @validate_model_data(ReminderUpdate)
+    @log_operation("更新提醒")
+    def update_reminder(self, reminder_id: int, reminder_data: ReminderUpdate) -> bool:
+        """更新提醒信息
+        
+        Args:
+            reminder_id: 提醒ID
+            reminder_data: 提醒更新数据，ReminderUpdate模型实例
+            
+        Returns:
+            bool: 更新是否成功
+        """
+        # 检查提醒是否存在
+        existing_reminder = self.get_reminder_by_id(reminder_id)
+        if not existing_reminder:
+            raise ValueError(f"提醒ID {reminder_id} 不存在")
+        
+        # 如果更新了项目ID，检查项目是否存在
+        project_id = reminder_data.project_id or existing_reminder.project_id
+        project = self.project_dao.get_by_id(project_id)
+        if not project:
+            raise ValueError(f"项目ID {project_id} 不存在")
+        
+        # 计算提醒日期
+        days_before = reminder_data.days_before or existing_reminder.days_before
+        end_date = project.end_date
+        
+        # 如果end_date是字符串，转换为日期对象
+        if isinstance(end_date, str):
+            end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
+        else:
+            end_date_obj = end_date
+            
+        reminder_date = end_date_obj - timedelta(days=days_before)
+        
+        # 更新提醒日期
+        reminder_data_dict = reminder_data.dict(exclude_unset=True, exclude_none=True)
+        # 确保due_date字段存在，即使在原始数据中没有提供
+        reminder_data_dict['due_date'] = reminder_date.strftime('%Y-%m-%d')
+        reminder_data_dict['status'] = ReminderStatus.UNREAD
+        
+        # 更新提醒
+        updated_reminder_data = ReminderUpdate(**reminder_data_dict)
+        return self.reminder_dao.update(reminder_id, updated_reminder_data)
+    
+    @log_operation("删除提醒")
+    def delete_reminder(self, reminder_id: int) -> bool:
+        """删除提醒
+        
+        Args:
+            reminder_id: 提醒ID
+            
+        Returns:
+            bool: 删除是否成功
+        """
+        return self.reminder_dao.delete(reminder_id)
+    
+    def get_reminder_by_id(self, reminder_id: int) -> Optional[Reminder]:
+        """根据ID获取提醒
+        
+        Args:
+            reminder_id: 提醒ID
+            
+        Returns:
+            Optional[Reminder]: 提醒对象，不存在返回None
+        """
+        return self.reminder_dao.get_by_id(reminder_id)
+    
+    def get_all_reminders(self) -> List[Reminder]:
+        """获取所有提醒
+        
+        Returns:
+            List[Reminder]: 提醒列表
+        """
+        return self.reminder_dao.get_all()
+    
+    def get_unread_reminders(self) -> List[Reminder]:
+        """获取未读提醒
+        
+        Returns:
+            List[Reminder]: 未读提醒列表
+        """
+        return self.reminder_dao.get_unread()
+    
+    def mark_reminder_as_read(self, reminder_id: int) -> bool:
+        """标记提醒为已读
+        
+        Args:
+            reminder_id: 提醒ID
+            
+        Returns:
+            bool: 标记是否成功
+        """
+        return self.reminder_dao.mark_as_read(reminder_id)
+    
+    def check_due_reminders(self) -> List[Reminder]:
+        """检查到期提醒
+        
+        Returns:
+            List[Reminder]: 到期提醒列表
+        """
+        today = datetime.now().strftime('%Y-%m-%d')
+        return self.reminder_dao.get_upcoming_reminders(today)
+    
+    def get_reminders_by_project(self, project_id: int) -> List[Reminder]:
+        """获取项目的所有提醒
+        
+        Args:
+            project_id: 项目ID
+            
+        Returns:
+            List[Reminder]: 提醒列表
+        """
+        return self.reminder_dao.get_by_project_id(project_id)

@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-科研项目管理系统 - 项目数据访问对象"""
+科研项目管理系统 - 项目数据访问对象
+"""
+from typing import List, Optional, Dict, Any, Union
+
 from data.db_connection import with_db_connection
+from models.project import Project, ProjectCreate, ProjectUpdate, ProjectStatus
 from pymysql.cursors import DictCursor, Cursor
 
 
@@ -10,153 +14,147 @@ class ProjectDAO:
     """项目数据访问对象"""
 
     def __init__(self):
-        pass
+        self.table_name = "projects"
+        self.model = Project
 
-    def insert(self, project_data):
+    def insert(self, project_data: ProjectCreate) -> int:
         """插入新项目"""
 
         def operation(cursor):
-            sql = """
-                INSERT INTO projects (
-                    project_name, leader, phone, email, start_date, end_date,
-                    funding_unit, level, funding_amount, currency, status
+            # 使用模型的字段名和占位符
+            fields = ProjectCreate.get_field_names()
+            placeholders = ProjectCreate.get_sql_placeholders()
+            
+            sql = f"""
+                INSERT INTO {self.table_name} (
+                    {', '.join(fields)}
                 ) VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                    {placeholders}
                 )
             """
-            params = (
-                project_data['project_name'],
-                project_data['leader'],
-                project_data['phone'],
-                project_data['email'],
-                project_data['start_date'],
-                project_data['end_date'],
-                project_data['funding_unit'],
-                project_data['level'],
-                project_data['funding_amount'],
-                project_data['currency'],
-                project_data.get('status', '进行中')
-            )
+            
+            # 从模型获取参数值
+            params = tuple(getattr(project_data, field) for field in fields)
             cursor.execute(sql, params)
             return cursor.lastrowid
 
         result = with_db_connection(operation, cursor_type=Cursor)
         return result if result is not None else -1
 
-    def get_by_id(self, project_id):
+    def get_by_id(self, project_id: int) -> Optional[Project]:
         """根据ID获取项目"""
 
         def operation(cursor):
-            sql = "SELECT * FROM projects WHERE id = %s"
+            sql = f"SELECT * FROM {self.table_name} WHERE id = %s"
             cursor.execute(sql, (project_id,))
             return cursor.fetchone()
 
         result = with_db_connection(operation)
-        return result if result is not None else None
+        if result is not None:
+            return Project(**result)
+        return None
 
-    def get_by_name(self, project_name):
+    def get_by_name(self, project_name: str) -> Optional[Project]:
         """根据名称获取项目"""
 
         def operation(cursor):
-            sql = "SELECT * FROM projects WHERE project_name = %s"
+            sql = f"SELECT * FROM {self.table_name} WHERE project_name = %s"
             cursor.execute(sql, (project_name,))
             return cursor.fetchone()
 
         result = with_db_connection(operation)
-        return result if result is not None else None
+        if result is not None:
+            return Project(**result)
+        return None
 
-    def update(self, project_data):
+    def update(self, project_id: int, project_data: ProjectUpdate) -> bool:
         """更新项目"""
 
         def operation(cursor):
-            sql = """
-                UPDATE projects SET
-                    project_name = %s, leader = %s, phone = %s, email = %s,
-                    start_date = %s, end_date = %s, funding_unit = %s,
-                    level = %s, funding_amount = %s, currency = %s,
-                    status = %s
+            # 只更新非空字段
+            update_data = project_data.dict(exclude_unset=True, exclude_none=True)
+            if not update_data:
+                return False
+                
+            set_clause = ", ".join([f"{field} = %s" for field in update_data.keys()])
+            values = list(update_data.values())
+            values.append(project_id)  # 添加WHERE条件的参数
+            
+            sql = f"""
+                UPDATE {self.table_name} SET
+                    {set_clause}
                 WHERE id = %s
             """
-            params = (
-                project_data['project_name'],
-                project_data['leader'],
-                project_data['phone'],
-                project_data['email'],
-                project_data['start_date'],
-                project_data['end_date'],
-                project_data['funding_unit'],
-                project_data['level'],
-                project_data['funding_amount'],
-                project_data['currency'],
-                project_data['status'],
-                project_data['id']
-            )
-            cursor.execute(sql, params)
+            
+            cursor.execute(sql, tuple(values))
             return cursor.rowcount > 0
 
         result = with_db_connection(operation, cursor_type=Cursor)
         return result if result is not None else False
 
-    def delete(self, project_id):
+    def delete(self, project_id: int) -> bool:
         """删除项目"""
 
         def operation(cursor):
-            sql = "DELETE FROM projects WHERE id = %s"
+            sql = f"DELETE FROM {self.table_name} WHERE id = %s"
             cursor.execute(sql, (project_id,))
             return cursor.rowcount > 0
 
         result = with_db_connection(operation, cursor_type=Cursor)
         return result if result is not None else False
 
-    def list_all(self):
-        """列出所有项目"""
+    def get_all(self) -> List[Project]:
+        """获取所有项目"""
 
         def operation(cursor):
-            sql = "SELECT * FROM projects ORDER BY start_date DESC"
+            sql = f"SELECT * FROM {self.table_name} ORDER BY id DESC"
             cursor.execute(sql)
             return cursor.fetchall()
 
-        result = with_db_connection(operation)
-        return result if result is not None else []
+        results = with_db_connection(operation)
+        if results is not None:
+            return [Project(**item) for item in results]
+        return []
 
-    def search(self, conditions):
+    def search(self, criteria: Dict[str, Any]) -> List[Project]:
         """根据条件搜索项目"""
 
         def operation(cursor):
-            sql = "SELECT * FROM projects WHERE 1=1"
+            # 构建查询条件
+            conditions = []
             params = []
-
-            if 'project_name' in conditions and conditions['project_name']:
-                sql += " AND project_name LIKE %s"
-                params.append(f"%{conditions['project_name']}%")
-
-            if 'leader' in conditions and conditions['leader']:
-                sql += " AND leader LIKE %s"
-                params.append(f"%{conditions['leader']}%")
-
-            if 'start_date' in conditions and conditions['start_date']:
-                sql += " AND start_date >= %s"
-                params.append(conditions['start_date'])
-
-            if 'end_date' in conditions and conditions['end_date']:
-                sql += " AND end_date <= %s"
-                params.append(conditions['end_date'])
-
-            if 'funding_unit' in conditions and conditions['funding_unit']:
-                sql += " AND funding_unit = %s"
-                params.append(conditions['funding_unit'])
-
-            if 'level' in conditions and conditions['level']:
-                sql += " AND level = %s"
-                params.append(conditions['level'])
-
-            if 'status' in conditions and conditions['status']:
-                sql += " AND status = %s"
-                params.append(conditions['status'])
-
-            sql += " ORDER BY start_date DESC"
-            cursor.execute(sql, params)
+            
+            for field, value in criteria.items():
+                if value is not None:
+                    if field == 'status' and isinstance(value, ProjectStatus):
+                        value = value.value
+                    
+                    if isinstance(value, str) and '%' in value:
+                        conditions.append(f"{field} LIKE %s")
+                    else:
+                        conditions.append(f"{field} = %s")
+                    params.append(value)
+            
+            where_clause = " AND ".join(conditions) if conditions else "1=1"
+            
+            sql = f"SELECT * FROM {self.table_name} WHERE {where_clause} ORDER BY id DESC"
+            cursor.execute(sql, tuple(params))
             return cursor.fetchall()
 
-        result = with_db_connection(operation)
-        return result if result is not None else []
+        results = with_db_connection(operation)
+        if results is not None:
+            return [Project(**item) for item in results]
+        return []
+
+    def count_by_status(self) -> Dict[str, int]:
+        """统计各状态项目数量"""
+
+        def operation(cursor):
+            sql = f"SELECT status, COUNT(*) as count FROM {self.table_name} GROUP BY status"
+            cursor.execute(sql)
+            return cursor.fetchall()
+
+        results = with_db_connection(operation)
+        if results is not None:
+            return {item['status']: item['count'] for item in results}
+        return {}

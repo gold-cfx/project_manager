@@ -19,6 +19,7 @@ from matplotlib.figure import Figure
 
 from logic.query_logic import QueryLogic
 from logic.project_logic import ProjectLogic
+from models.reminder import ReminderCreate
 from ui.data_editor import ProjectEditorDialog
 
 # 动态导入其他对话框，避免循环依赖
@@ -242,8 +243,8 @@ class ProjectQuery(QWidget):
 
     def load_project_status(self):
         # 加载项目状态
-        status_list = ['进行中', '已结题', '延期', '终止']
-        self.status_combo.addItems(status_list)
+        from models.project import ProjectStatus
+        self.status_combo.addItems([status.value for status in ProjectStatus])
 
     def load_funding_units(self):
         # 加载资助单位
@@ -252,8 +253,8 @@ class ProjectQuery(QWidget):
 
     def load_project_levels(self):
         # 加载项目级别
-        level_list = ['国家级', '省部级', '市厅级', '校级', '其他']
-        self.level_combo.addItems(level_list)
+        from models.project import ProjectLevel
+        self.level_combo.addItems([status.value for status in ProjectLevel])
 
     def collect_query_conditions(self):
         # 收集查询条件
@@ -391,7 +392,8 @@ class ProjectQuery(QWidget):
     def generate_level_count_charts(self):
         """按级别统计项目数量"""
         # 准备数据
-        level_counts = {'国家级': 0, '省部级': 0, '市厅级': 0, '校级': 0, '其他': 0}
+        from models.project import ProjectLevel
+        level_counts = {level.value: 0 for level in ProjectLevel}
         for project in self.projects_data:
             level = project['level']
             if level in level_counts:
@@ -527,7 +529,8 @@ class ProjectQuery(QWidget):
     def generate_level_funding_charts(self):
         """按级别统计资助金额"""
         # 准备数据
-        level_funding = {'国家级': 0, '省部级': 0, '市厅级': 0, '校级': 0, '其他': 0}
+        from models.project import ProjectLevel
+        level_funding = {level.value: 0 for level in ProjectLevel}
         for project in self.projects_data:
             level = project['level']
             try:
@@ -688,15 +691,16 @@ class ProjectQuery(QWidget):
                 for project_id in reminder_data['project_ids']:
                     project = self.project_logic.get_project_by_id(project_id)
                     if project:
-                        project_data = {
+                        reminder_create_data = {
                             'project_id': project_id,
-                            'project_name': project['project_name'],
+                            'project_name': project.project_name,
                             'reminder_type': reminder_data['reminder_type'],
                             'days_before': reminder_data['days_before'],
                             'reminder_way': reminder_data['reminder_way'],
-                            'content': reminder_data['content']
+                            'content': reminder_data['content'],
+                            'due_date': reminder_data['due_date']  # 添加due_date字段
                         }
-                        if reminder_logic.add_reminder(project_data):
+                        if reminder_logic.create_reminder(reminder_create_data):
                             success_count += 1
                         else:
                             fail_count += 1

@@ -8,39 +8,60 @@ from data.db_connection import with_db_connection
 from datetime import datetime, date
 from decimal import Decimal
 import pymysql
+from typing import Dict, Any, List
+
+from models.base import BaseDataModel
+from pydantic import Field
+
+
+class TestDataModel(BaseDataModel):
+    """测试数据模型"""
+    date_field: date = Field(..., description="日期字段")
+    datetime_field: datetime = Field(..., description="日期时间字段")
+    decimal_field: Decimal = Field(..., description="Decimal字段")
+    list_field: List[Any] = Field(..., description="列表字段")
+    dict_field: Dict[str, Any] = Field(..., description="字典字段")
 
 
 def test_datetime_formatting():
     """测试日期时间和Decimal格式化"""
     print("开始测试日期时间和Decimal格式化...")
 
-    # 测试1: 直接返回日期时间和Decimal对象
-    def test_direct_objects():
-        def operation(cursor):
-            return {
-                'date': date(2023, 12, 31),
-                'datetime': datetime(2023, 12, 31, 23, 59, 59),
-                'decimal': Decimal('450000.00'),
-                'list': [date(2023, 1, 1), datetime(2023, 1, 1, 12, 0, 0), Decimal('123456.78')],
-                'dict': {
-                    'sub_date': date(2023, 2, 1), 
-                    'sub_datetime': datetime(2023, 2, 1, 12, 0, 0),
-                    'sub_decimal': Decimal('98765.43')
-                }
+    # 测试1: 使用Pydantic模型
+    def test_pydantic_model():
+        # 创建测试数据模型
+        test_model = TestDataModel(
+            date_field=date(2023, 12, 31),
+            datetime_field=datetime(2023, 12, 31, 23, 59, 59),
+            decimal_field=Decimal('450000.00'),
+            list_field=[date(2023, 1, 1), datetime(2023, 1, 1, 12, 0, 0), Decimal('123456.78')],
+            dict_field={
+                'sub_date': date(2023, 2, 1), 
+                'sub_datetime': datetime(2023, 2, 1, 12, 0, 0),
+                'sub_decimal': Decimal('98765.43')
             }
-        return with_db_connection(operation)
-
-    result1 = test_direct_objects()
-    print("测试1 - 直接返回对象:")
-    print(f"格式化后的date: {result1['date']} (类型: {type(result1['date'])})")
-    print(f"格式化后的datetime: {result1['datetime']} (类型: {type(result1['datetime'])})")
-    print(f"格式化后的decimal: {result1['decimal']} (类型: {type(result1['decimal'])})")
-    print(f"列表中的date: {result1['list'][0]} (类型: {type(result1['list'][0])})")
-    print(f"列表中的datetime: {result1['list'][1]} (类型: {type(result1['list'][1])})")
-    print(f"列表中的decimal: {result1['list'][2]} (类型: {type(result1['list'][2])})")
-    print(f"字典中的date: {result1['dict']['sub_date']} (类型: {type(result1['dict']['sub_date'])})")
-    print(f"字典中的datetime: {result1['dict']['sub_datetime']} (类型: {type(result1['dict']['sub_datetime'])})")
-    print(f"字典中的decimal: {result1['dict']['sub_decimal']} (类型: {type(result1['dict']['sub_decimal'])})")
+        )
+        
+        # 获取原始字典
+        raw_dict = test_model.dict()
+        print("原始字典:")
+        print(f"date_field: {raw_dict['date_field']} (类型: {type(raw_dict['date_field'])})") 
+        print(f"datetime_field: {raw_dict['datetime_field']} (类型: {type(raw_dict['datetime_field'])})") 
+        print(f"decimal_field: {raw_dict['decimal_field']} (类型: {type(raw_dict['decimal_field'])})") 
+        
+        # 获取格式化字典
+        formatted_dict = test_model.to_formatted_dict()
+        print("\n格式化字典:")
+        print(f"date_field: {formatted_dict['date_field']} (类型: {type(formatted_dict['date_field'])})") 
+        print(f"datetime_field: {formatted_dict['datetime_field']} (类型: {type(formatted_dict['datetime_field'])})") 
+        print(f"decimal_field: {formatted_dict['decimal_field']} (类型: {type(formatted_dict['decimal_field'])})") 
+        print(f"list_field[0]: {formatted_dict['list_field'][0]} (类型: {type(formatted_dict['list_field'][0])})") 
+        print(f"dict_field['sub_date']: {formatted_dict['dict_field']['sub_date']} (类型: {type(formatted_dict['dict_field']['sub_date'])})") 
+        
+        return formatted_dict
+    
+    result1 = test_pydantic_model()
+    print("\n测试1 - Pydantic模型格式化完成!")
     print()
 
     # 测试2: 从数据库查询返回日期时间和Decimal
@@ -58,9 +79,9 @@ def test_datetime_formatting():
 
     result2 = test_db_objects()
     print("测试2 - 从数据库查询返回:")
-    print(f"数据库返回的date: {result2['date_col']} (类型: {type(result2['date_col'])})")
-    print(f"数据库返回的datetime: {result2['datetime_col']} (类型: {type(result2['datetime_col'])})")
-    print(f"数据库返回的decimal: {result2['decimal_col']} (类型: {type(result2['decimal_col'])})")
+    print(f"数据库返回的date: {result2['date_col']} (类型: {type(result2['date_col'])})") 
+    print(f"数据库返回的datetime: {result2['datetime_col']} (类型: {type(result2['datetime_col'])})") 
+    print(f"数据库返回的decimal: {result2['decimal_col']} (类型: {type(result2['decimal_col'])})") 
 
     print("\n格式化测试完成!")
 

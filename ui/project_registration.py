@@ -32,7 +32,9 @@ class ProjectRegistration(ProjectEditor):
         # 重写保存方法，添加保存成功后的重置表单逻辑
         if self.validate_form():
             project_data = self.collect_form_data()
-            success = self.project_logic.save_project(project_data)
+            from models.project import ProjectCreate
+            project_create = ProjectCreate(**project_data)
+            success = self.project_logic.create_project(project_create) > 0
             if success:
                 QMessageBox.information(self, '保存成功', '项目信息已成功保存')
                 self.reset_form()

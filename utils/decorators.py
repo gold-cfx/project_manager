@@ -7,6 +7,9 @@
 from datetime import date, datetime
 from decimal import Decimal
 import functools
+from typing import Any, Dict, List, Tuple, Union, Optional
+
+from models.base import DateTimeFormatterMixin
 
 
 def format_datetime_in_result(func):
@@ -19,31 +22,59 @@ def format_datetime_in_result(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         result = func(*args, **kwargs)
-        return format_result(result)
+        return DateTimeFormatterMixin.format_value(result)
     return wrapper
 
 
-def format_result(data):
-    """递归处理结果中的数据格式"""
-    if isinstance(data, (date, datetime, )):
-        if isinstance(data, date) and not isinstance(data, datetime):
-            # 处理 date 类型
-            return data.strftime('%Y-%m-%d')
-        else:
-            # 处理 datetime 类型
-            return data.strftime('%Y-%m-%d %H:%M:%S')
-    elif isinstance(data, Decimal):
-        # 处理 Decimal 类型
-        return str(float(data))
-    elif isinstance(data, dict):
-        # 处理字典
-        return {k: format_result(v) for k, v in data.items()}
-    elif isinstance(data, list):
-        # 处理列表
-        return [format_result(item) for item in data]
-    elif isinstance(data, tuple):
-        # 处理元组
-        return tuple(format_result(item) for item in data)
-    else:
-        # 其他类型保持不变
-        return data
+def validate_model_data(model_class):
+    """
+    验证数据是否符合模型要求
+    
+    Args:
+        model_class: Pydantic模型类
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            # 检查所有参数，找到第一个可能是要验证的数据的参数
+            for i, arg in enumerate(args):
+                if i > 0:  # 跳过self参数
+                    # 如果参数是字典或者已经是模型实例，则认为它是要验证的数据
+                    if isinstance(arg, dict) or isinstance(arg, model_class):
+                        data = arg
+                        # 如果数据不是模型实例，尝试创建一个
+                        if not isinstance(data, model_class):
+                            try:
+                                validated_data = model_class(**data)
+                                # 替换原始参数
+                                args = list(args)
+                                args[i] = validated_data
+                                args = tuple(args)
+                            except Exception as e:
+                                raise ValueError(f"数据验证失败: {e}")
+                        break
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def log_operation(operation_name):
+    """
+    记录操作日志
+    
+    Args:
+        operation_name: 操作名称
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            print(f"执行操作: {operation_name}")
+            try:
+                result = func(*args, **kwargs)
+                print(f"操作完成: {operation_name}")
+                return result
+            except Exception as e:
+                print(f"操作失败: {operation_name}, 错误: {e}")
+                raise
+        return wrapper
+    return decorator

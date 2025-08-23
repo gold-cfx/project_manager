@@ -80,17 +80,17 @@ class ReminderManagement(QWidget):
         for row, reminder in enumerate(reminders):
             self.reminder_table.insertRow(row)
             # 存储提醒ID（不显示）
-            self.reminder_table.setItem(row, 0, QTableWidgetItem(str(reminder['id'])))
-            self.reminder_table.setItem(row, 1, QTableWidgetItem(reminder['project_name']))
-            self.reminder_table.setItem(row, 2, QTableWidgetItem(reminder['reminder_type']))
-            self.reminder_table.setItem(row, 3, QTableWidgetItem(reminder['due_date']))
-            self.reminder_table.setItem(row, 4, QTableWidgetItem(str(reminder['days_before'])))
-            self.reminder_table.setItem(row, 5, QTableWidgetItem(reminder['reminder_way']))
-            self.reminder_table.setItem(row, 6, QTableWidgetItem(reminder['status']))
-            self.reminder_table.setItem(row, 7, QTableWidgetItem(reminder['create_time']))
+            self.reminder_table.setItem(row, 0, QTableWidgetItem(str(reminder.id)))
+            self.reminder_table.setItem(row, 1, QTableWidgetItem(reminder.project_name))
+            self.reminder_table.setItem(row, 2, QTableWidgetItem(reminder.reminder_type))
+            self.reminder_table.setItem(row, 3, QTableWidgetItem(reminder.due_date.strftime('%Y-%m-%d')))
+            self.reminder_table.setItem(row, 4, QTableWidgetItem(str(reminder.days_before)))
+            self.reminder_table.setItem(row, 5, QTableWidgetItem(reminder.reminder_way))
+            self.reminder_table.setItem(row, 6, QTableWidgetItem(reminder.status))
+            self.reminder_table.setItem(row, 7, QTableWidgetItem(reminder.create_time.strftime('%Y-%m-%d %H:%M:%S')))
 
             # 设置未读提醒的样式
-            if reminder['status'] == '未读':
+            if reminder.status == '未读':
                 for column in range(1, self.reminder_table.columnCount()):
                     item = self.reminder_table.item(row, column)
                     font = item.font()
@@ -158,7 +158,7 @@ class ReminderManagement(QWidget):
             # 获取编辑后的提醒数据
             reminder_data = edit_dialog.get_reminder_data()
             # 更新提醒
-            if self.reminder_logic.update_reminder(reminder_data):
+            if self.reminder_logic.update_reminder(reminder_id, reminder_data):
                 QMessageBox.information(self, '成功', '提醒已成功更新')
                 # 重新加载提醒列表
                 self.load_reminders()
