@@ -12,7 +12,7 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (
     QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel,
     QLineEdit, QDateEdit, QComboBox, QPushButton, QTableWidget, QTableWidgetItem,
-    QGroupBox, QMessageBox, QTabWidget, QSplitter, QFileDialog, QHeaderView, QDialog
+    QGroupBox, QMessageBox, QTabWidget, QSplitter, QFileDialog, QHeaderView, QDialog, QLayout
 )
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -56,17 +56,40 @@ class ProjectQuery(QWidget):
 
         # 创建查询条件组
         query_group = QGroupBox('查询条件')
-        query_layout = QFormLayout()
-
+        
+        # 创建第一个FormLayout
+        query_layout1 = QFormLayout()
+        # 创建第二个FormLayout
+        query_layout2 = QFormLayout()
+        # 设置两个formlayout的宽度一致
+        # query_layout1.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        # query_layout2.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+        # query_layout1.setHorizontalSpacing(10)
+        # query_layout2.setHorizontalSpacing(10)
+        # query_layout1.setSizeConstraint(QLayout.SetMinAndMaxSize)
+        # query_layout2.setSizeConstraint(QLayout.SetMinAndMaxSize)
+        
         # 项目名称
         self.project_name_edit = QLineEdit()
         self.project_name_edit.setPlaceholderText('请输入项目名称关键词')
-        query_layout.addRow('项目名称', self.project_name_edit)
+        query_layout1.addRow('项目名称', self.project_name_edit)
 
         # 负责人
         self.leader_edit = QLineEdit()
         self.leader_edit.setPlaceholderText('请输入负责人关键词')
-        query_layout.addRow('项目负责人', self.leader_edit)
+        query_layout2.addRow('项目负责人', self.leader_edit)
+
+        # 课题资助单位
+        self.funding_unit_combo = QComboBox()
+        self.funding_unit_combo.addItem('全部')
+        query_layout1.addRow('课题资助单位', self.funding_unit_combo)
+
+        # 课题级别
+        self.level_combo = QComboBox()
+        self.level_combo.addItem('全部')
+        query_layout2.addRow('课题级别', self.level_combo)
+        
+
 
         # 开始时间范围 (项目在该时间范围内开始)
         start_range_layout = QHBoxLayout()
@@ -92,7 +115,7 @@ class ProjectQuery(QWidget):
         start_range_layout.addWidget(self.start_date_to)
         start_range_layout.addWidget(self.start_quick_combo)
 
-        query_layout.addRow('开始时间范围', start_range_layout)
+        query_layout1.addRow('开始时间范围', start_range_layout)
 
         # 结束时间范围 (项目在该时间范围内结束)
         end_range_layout = QHBoxLayout()
@@ -118,24 +141,18 @@ class ProjectQuery(QWidget):
         end_range_layout.addWidget(self.end_date_to)
         end_range_layout.addWidget(self.end_quick_combo)
 
-        query_layout.addRow('结束时间范围', end_range_layout)
-
-        # 课题资助单位
-        self.funding_unit_combo = QComboBox()
-        self.funding_unit_combo.addItem('全部')
-        query_layout.addRow('课题资助单位', self.funding_unit_combo)
-
-        # 课题级别
-        self.level_combo = QComboBox()
-        self.level_combo.addItem('全部')
-        query_layout.addRow('课题级别', self.level_combo)
-
+        query_layout2.addRow('结束时间范围', end_range_layout)
         # 项目状态
         self.status_combo = QComboBox()
         self.status_combo.addItem('全部')
-        query_layout.addRow('项目状态', self.status_combo)
+        query_layout1.addRow('项目状态', self.status_combo)
 
-        query_group.setLayout(query_layout)
+        # 将两个FormLayout放入水平布局
+        h_layout = QHBoxLayout()
+        h_layout.addLayout(query_layout1)
+        h_layout.addLayout(query_layout2)
+        query_group.setLayout(h_layout)
+        
         main_layout.addWidget(query_group)
 
         # 创建查询按钮区域

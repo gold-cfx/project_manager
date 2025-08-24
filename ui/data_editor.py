@@ -216,91 +216,101 @@ class BaseProjectEditor(object):
         basic_info_group = QGroupBox('项目基本信息')
         # 创建水平布局（用于并排放置两个 QFormLayout）
         self.h_layout = QHBoxLayout()
-        basic_info_layout = QFormLayout()
+        
+        # 创建第一个FormLayout
+        basic_info_layout1 = QFormLayout()
 
+        # 创建第二个FormLayout
+        basic_info_layout2 = QFormLayout()
+        
         # 项目名称
         self.project_name_edit = QLineEdit()
         self.project_name_edit.setPlaceholderText('请输入项目名称')
         self.project_name_edit.textChanged.connect(self.on_project_name_changed)
-        basic_info_layout.addRow('项目名称 *', self.project_name_edit)
+        basic_info_layout1.addRow('项目名称 *', self.project_name_edit)
 
         # 项目负责人
         self.leader_edit = QLineEdit()
         self.leader_edit.setPlaceholderText('请输入项目负责人')
-        basic_info_layout.addRow('项目负责人 *', self.leader_edit)
+        basic_info_layout2.addRow('项目负责人 *', self.leader_edit)
 
         # 科室
         self.department_edit = QLineEdit()
         self.department_edit.setPlaceholderText('请输入科室')
-        basic_info_layout.addRow('科室 *', self.department_edit)
+        basic_info_layout1.addRow('科室 *', self.department_edit)
 
         # 联系电话
         self.phone_edit = QLineEdit()
         self.phone_edit.setPlaceholderText('请输入联系电话')
-        basic_info_layout.addRow('联系电话 *', self.phone_edit)
+        basic_info_layout2.addRow('联系电话 *', self.phone_edit)
 
         # 项目来源
         self.source_combo = QComboBox()
         self.source_combo.addItems(['请选择项目来源', '国家自然科学基金', '科技部项目', '教育部项目', '省级科技计划', '市级科技计划', '其他'])        
-        basic_info_layout.addRow('项目来源 *', self.source_combo)
+        basic_info_layout1.addRow('项目来源 *', self.source_combo)
 
         # 项目类型
         self.type_combo = QComboBox()
         self.type_combo.addItems(['纵向课题', '横向课题', '研究者发起的临床研究项目', 'GCP项目'])        
-        basic_info_layout.addRow('项目类型 *', self.type_combo)
+        basic_info_layout2.addRow('项目类型 *', self.type_combo)
 
+        
         # 项目级别
         self.level_combo = QComboBox()
         # 使用 ProjectLevel 枚举中定义的值
         from models.project import ProjectLevel
         self.level_combo.addItems([level.value for level in ProjectLevel])        
-        basic_info_layout.addRow('项目级别 *', self.level_combo)
+        basic_info_layout1.addRow('项目级别 *', self.level_combo)
 
         # 资助经费（万元）
         self.funding_amount_edit = QDoubleSpinBox()
         self.funding_amount_edit.setRange(0, 10000000)
         self.funding_amount_edit.setDecimals(2)
-        basic_info_layout.addRow('资助经费（万元） *', self.funding_amount_edit)
+        basic_info_layout2.addRow('资助经费（万元） *', self.funding_amount_edit)
 
         # 资助单位
         self.funding_unit_edit = QLineEdit()
         self.funding_unit_edit.setPlaceholderText('请输入资助单位')
-        basic_info_layout.addRow('资助单位 *', self.funding_unit_edit)
+        basic_info_layout1.addRow('资助单位 *', self.funding_unit_edit)
 
         # 立项年度
         self.approval_year_edit = QLineEdit()
         self.approval_year_edit.setPlaceholderText('请输入立项年度，格式：YYYY')
-        basic_info_layout.addRow('立项年度 *', self.approval_year_edit)
+        basic_info_layout2.addRow('立项年度 *', self.approval_year_edit)
 
         # 项目编号
         self.project_code_edit = QLineEdit()
         self.project_code_edit.setPlaceholderText('请输入项目编号')
-        basic_info_layout.addRow('项目编号 *', self.project_code_edit)
+        basic_info_layout1.addRow('项目编号 *', self.project_code_edit)
+        # 项目状态
+        self.status_combo = QComboBox()
+        # 使用 ProjectStatus 枚举中定义的值
+        from models.project import ProjectStatus
+        self.status_combo.addItems([status.value for status in ProjectStatus])
+        basic_info_layout2.addRow('项目状态 *', self.status_combo)
 
         # 项目开始时间
         self.start_date_edit = QDateEdit(QDate.currentDate())
         self.start_date_edit.setCalendarPopup(True)
         self.start_date_edit.dateChanged.connect(self.on_date_changed)
-        basic_info_layout.addRow('项目开始时间 *', self.start_date_edit)
+        basic_info_layout1.addRow('项目开始时间 *', self.start_date_edit)
 
         # 项目结束时间
         self.end_date_edit = QDateEdit(QDate.currentDate().addYears(1))
         self.end_date_edit.setCalendarPopup(True)
         self.end_date_edit.dateChanged.connect(self.on_date_changed)
-        basic_info_layout.addRow('项目结束时间 *', self.end_date_edit)
+        basic_info_layout2.addRow('项目结束时间 *', self.end_date_edit)
 
-        # 项目状态
-        self.status_combo = QComboBox()
-        # 使用 ProjectStatus 枚举中定义的值
-        from models.project import ProjectStatus
-        self.status_combo.addItems([status.value for status in ProjectStatus])        
-        basic_info_layout.addRow('项目状态 *', self.status_combo)
+
 
         # 项目持续时间
         self.duration_label = QLabel('1 年')
-        basic_info_layout.addRow('项目持续时间', self.duration_label)
+        basic_info_layout1.addRow('项目持续时间', self.duration_label)
 
-        basic_info_group.setLayout(basic_info_layout)
+        # 将两个FormLayout添加到水平布局
+        self.h_layout.addLayout(basic_info_layout1)
+        self.h_layout.addLayout(basic_info_layout2)
+        basic_info_group.setLayout(self.h_layout)
         main_layout.addWidget(basic_info_group)
 
 
