@@ -3,9 +3,15 @@
 """
 科研项目管理系统 - 配置文件
 """
+import json
+import os
 # 确保datetime模块被导入
 from datetime import datetime
 
+config_dir = os.path.dirname(__file__)
+root_dir = os.path.dirname(config_dir)
+with open(os.path.join(config_dir, 'config.json'), 'r') as f:
+    config = json.load(f)
 # 数据库配置
 DB_CONFIG = {
     'host': '127.0.0.1',  # 数据库主机
@@ -14,6 +20,8 @@ DB_CONFIG = {
     'db': 'research_project',  # 数据库名
     'charset': 'utf8mb4'  # 字符集
 }
+DB_CONFIG.update(config['database'])
+UPLOAD_DIR = config['upload_dir'] or os.path.join(root_dir, 'attachments')
 
 # 系统配置
 SYSTEM_CONFIG = {

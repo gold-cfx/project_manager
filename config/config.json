@@ -1,4 +1,10 @@
 {
-    "database": "“ss\"",
-    "upload_dir": "C:/Users/USER/Downloads"
+    "database": {
+        "host": "127.0.0.1",
+        "user": "root",
+        "password": "",
+        "db": "research_project",
+        "charset": "utf8mb4"
+    },
+    "upload_dir": "C:\\Farmar\\code\\office-v3\\attachments"
 }

@@ -10,6 +10,7 @@ import shutil
 from datetime import datetime
 from typing import List, Optional
 
+from config.settings import UPLOAD_DIR
 from data.project_result_attachment_dao import ProjectResultAttachmentDAO
 from models.project_result_attachment import (
     ProjectResultAttachment,
@@ -22,7 +23,7 @@ class ProjectResultAttachmentLogic:
 
     def __init__(self):
         self.dao = ProjectResultAttachmentDAO()
-        self.attachment_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'attachments')
+        self.attachment_dir = UPLOAD_DIR
         os.makedirs(self.attachment_dir, exist_ok=True)
 
     def _generate_file_path(self, project_result_id: int, file_name: str) -> str:
