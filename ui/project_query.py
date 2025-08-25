@@ -6,21 +6,20 @@
 import csv
 import os
 
-import matplotlib.pyplot as plt
 from PyQt5.QtCore import Qt, QDate
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (
     QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel,
     QLineEdit, QDateEdit, QComboBox, QPushButton, QTableWidget, QTableWidgetItem,
-    QGroupBox, QMessageBox, QTabWidget, QSplitter, QFileDialog, QHeaderView, QDialog, QLayout
+    QGroupBox, QMessageBox, QSplitter, QFileDialog, QHeaderView, QLayout
 )
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
+from matplotlib import pyplot as plt
 
 from logic.query_logic import QueryLogic
 from logic.project_logic import ProjectLogic
 from models.reminder import ReminderCreate
 from ui.data_editor import ProjectEditorDialog
+from ui.chart_dialog import ChartDialog
 
 # 动态导入其他对话框，避免循环依赖
 
@@ -198,7 +197,6 @@ class ProjectQuery(QWidget):
         header = self.result_table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.Stretch)
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-
         # 添加双击事件处理
         self.result_table.doubleClicked.connect(self.on_project_double_clicked)
         # 添加表头点击事件处理
@@ -207,54 +205,13 @@ class ProjectQuery(QWidget):
         self.result_table.itemClicked.connect(self.on_item_clicked)
         self.result_splitter.addWidget(self.result_table)
 
-        # 图表展示
-        self.chart_tab = QTabWidget()
-
-        # 柱状图
-        self.bar_chart_widget = QWidget()
-        self.bar_chart_layout = QVBoxLayout(self.bar_chart_widget)
-        self.bar_figure = Figure(figsize=(5, 4), dpi=100)
-        self.bar_canvas = FigureCanvas(self.bar_figure)
-        self.bar_chart_layout.addWidget(self.bar_canvas)
-        self.chart_tab.addTab(self.bar_chart_widget, '柱状图')
-
-        # 饼图
-        self.pie_chart_widget = QWidget()
-        self.pie_chart_layout = QVBoxLayout(self.pie_chart_widget)
-        self.pie_figure = Figure(figsize=(5, 4), dpi=100)
-        self.pie_canvas = FigureCanvas(self.pie_figure)
-        self.pie_chart_layout.addWidget(self.pie_canvas)
-        self.chart_tab.addTab(self.pie_chart_widget, '饼图')
-
-        # 折线图
-        self.line_chart_widget = QWidget()
-        self.line_chart_layout = QVBoxLayout(self.line_chart_widget)
-        self.line_figure = Figure(figsize=(5, 4), dpi=100)
-        self.line_canvas = FigureCanvas(self.line_figure)
-        self.line_chart_layout.addWidget(self.line_canvas)
-        self.chart_tab.addTab(self.line_chart_widget, '折线图')
-
-        # 添加图表类型选择
-        chart_type_layout = QHBoxLayout()
-        chart_type_layout.addWidget(QLabel('图表数据类型:'))
-        self.chart_data_combo = QComboBox()
-        self.chart_data_combo.addItems([
-            '按级别统计项目数量', '按资助单位统计项目数量',
-            '按年份统计项目数量', '按级别统计资助金额'
-        ])
-        self.chart_data_combo.currentIndexChanged.connect(self.generate_charts)
-        chart_type_layout.addWidget(self.chart_data_combo)
-        chart_type_layout.addStretch()
-
-        # 确保chart_tab有布局
-        if self.chart_tab.layout() is None:
-            main_chart_layout = QVBoxLayout(self.chart_tab)
-            main_chart_layout.addLayout(chart_type_layout)
-        else:
-            self.chart_tab.layout().insertLayout(0, chart_type_layout)
-
-        self.result_splitter.addWidget(self.chart_tab)
-        self.result_splitter.setSizes([400, 300])
+        # 添加图表按钮
+        chart_btn_layout = QHBoxLayout()
+        chart_btn = QPushButton('根据查询结果显示统计图表')
+        chart_btn.clicked.connect(self.show_chart_dialog)
+        chart_btn_layout.addWidget(chart_btn)
+        chart_btn_layout.addStretch()
+        main_layout.addLayout(chart_btn_layout)
 
         main_layout.addWidget(self.result_splitter)
 
@@ -314,7 +271,6 @@ class ProjectQuery(QWidget):
         conditions = self.collect_query_conditions()
         projects = self.query_logic.query_projects(conditions)
         self.display_query_results(projects)
-        self.generate_charts()
 
     def display_query_results(self, projects):
         # 显示查询结果
@@ -379,59 +335,17 @@ class ProjectQuery(QWidget):
         # 连接单元格点击事件以更新选中状态
         self.result_table.itemClicked.connect(self.on_item_clicked)
 
-    def generate_charts(self):
-        """生成图表"""
+    def show_chart_dialog(self):
+        """显示图表弹窗"""
         if not hasattr(self, 'projects_data') or not self.projects_data:
+            QMessageBox.information(self, '提示', '请先查询项目数据')
             return
 
-        chart_type = self.chart_data_combo.currentText()
+        # 创建并显示图表弹窗
+        chart_dialog = ChartDialog(self, self.projects_data)
+        chart_dialog.exec_()
 
-        # 清除现有图表
-        self.bar_figure.clear()
-        self.pie_figure.clear()
-        self.line_figure.clear()
 
-        # 根据选择的图表类型生成数据
-        if chart_type == '按级别统计项目数量':
-            self.generate_level_count_charts()
-        elif chart_type == '按资助单位统计项目数量':
-            self.generate_funding_unit_count_charts()
-        elif chart_type == '按年份统计项目数量':
-            self.generate_year_count_charts()
-        elif chart_type == '按级别统计资助金额':
-            self.generate_level_funding_charts()
-
-        # 刷新画布
-        self.bar_canvas.draw()
-        self.pie_canvas.draw()
-        self.line_canvas.draw()
-
-    def generate_level_count_charts(self):
-        """按级别统计项目数量"""
-        # 准备数据
-        from models.project import ProjectLevel
-        level_counts = {level.value: 0 for level in ProjectLevel}
-        for project in self.projects_data:
-            level = project['level']
-            if level in level_counts:
-                level_counts[level] += 1
-            else:
-                level_counts['其他'] += 1
-
-        # 绘制柱状图
-        ax_bar = self.bar_figure.add_subplot(111)
-        levels = list(level_counts.keys())
-        counts = list(level_counts.values())
-        ax_bar.bar(levels, counts)
-        ax_bar.set_title('按级别统计项目数量')
-        ax_bar.set_xlabel('项目级别')
-        ax_bar.set_ylabel('项目数量')
-        ax_bar.tick_params(axis='x', rotation=45)
-
-        # 绘制饼图
-        ax_pie = self.pie_figure.add_subplot(111)
-        ax_pie.pie(counts, labels=levels, autopct='%1.1f%%')
-        ax_pie.set_title('项目级别分布')
 
     def on_date_quick_changed(self, index, date_type):
         current_date = QDate.currentDate()
@@ -475,106 +389,11 @@ class ProjectQuery(QWidget):
             from_edit.setDate(current_date)
             to_edit.setDate(current_date.addMonths(6))
 
-    def generate_funding_unit_count_charts(self):
-        """按资助单位统计项目数量"""
-        # 准备数据
-        unit_counts = {}
-        for project in self.projects_data:
-            unit = project['funding_unit']
-            if unit in unit_counts:
-                unit_counts[unit] += 1
-            else:
-                unit_counts[unit] = 1
 
-        # 限制显示的单位数量，避免图表过于拥挤
-        if len(unit_counts) > 5:
-            # 取前5个，其余合并为'其他'
-            sorted_units = sorted(unit_counts.items(), key=lambda x: x[1], reverse=True)
-            top_units = sorted_units[:5]
-            other_count = sum(item[1] for item in sorted_units[5:])
-            unit_counts = dict(top_units)
-            unit_counts['其他'] = other_count
 
-        # 绘制柱状图
-        ax_bar = self.bar_figure.add_subplot(111)
-        units = list(unit_counts.keys())
-        counts = list(unit_counts.values())
-        ax_bar.bar(units, counts)
-        ax_bar.set_title('按资助单位统计项目数量')
-        ax_bar.set_xlabel('资助单位')
-        ax_bar.set_ylabel('项目数量')
-        ax_bar.tick_params(axis='x', rotation=45)
 
-        # 绘制饼图
-        ax_pie = self.pie_figure.add_subplot(111)
-        ax_pie.pie(counts, labels=units, autopct='%1.1f%%')
-        ax_pie.set_title('资助单位分布')
 
-    def generate_year_count_charts(self):
-        """按年份统计项目数量"""
-        # 准备数据
-        year_counts = {}
-        for project in self.projects_data:
-            # 假设start_date格式为'YYYY-MM-DD'
-            year = project['start_date'].split('-')[0]
-            if year in year_counts:
-                year_counts[year] += 1
-            else:
-                year_counts[year] = 1
 
-        # 按年份排序
-        sorted_years = sorted(year_counts.keys())
-        year_counts = {year: year_counts[year] for year in sorted_years}
-
-        # 绘制柱状图
-        ax_bar = self.bar_figure.add_subplot(111)
-        years = list(year_counts.keys())
-        counts = list(year_counts.values())
-        ax_bar.bar(years, counts)
-        ax_bar.set_title('按年份统计项目数量')
-        ax_bar.set_xlabel('年份')
-        ax_bar.set_ylabel('项目数量')
-
-        # 绘制折线图
-        ax_line = self.line_figure.add_subplot(111)
-        ax_line.plot(years, counts, marker='o')
-        ax_line.set_title('项目数量年度趋势')
-        ax_line.set_xlabel('年份')
-        ax_line.set_ylabel('项目数量')
-        ax_line.grid(True)
-
-    def generate_level_funding_charts(self):
-        """按级别统计资助金额"""
-        # 准备数据
-        from models.project import ProjectLevel
-        level_funding = {level.value: 0 for level in ProjectLevel}
-        for project in self.projects_data:
-            level = project['level']
-            try:
-                # 假设funding_amount是字符串，需要转换为浮点数
-                amount = float(project['funding_amount'])
-                if level in level_funding:
-                    level_funding[level] += amount
-                else:
-                    level_funding['其他'] += amount
-            except (ValueError, TypeError):
-                # 如果无法转换，跳过
-                continue
-
-        # 绘制柱状图
-        ax_bar = self.bar_figure.add_subplot(111)
-        levels = list(level_funding.keys())
-        funding = list(level_funding.values())
-        ax_bar.bar(levels, funding)
-        ax_bar.set_title('按级别统计资助金额')
-        ax_bar.set_xlabel('项目级别')
-        ax_bar.set_ylabel('资助金额')
-        ax_bar.tick_params(axis='x', rotation=45)
-
-        # 绘制饼图
-        ax_pie = self.pie_figure.add_subplot(111)
-        ax_pie.pie(funding, labels=levels, autopct='%1.1f%%')
-        ax_pie.set_title('资助金额级别分布')
 
     def reset_query(self):
         """重置查询条件"""
@@ -599,12 +418,6 @@ class ProjectQuery(QWidget):
         # 清除图表数据
         if hasattr(self, 'projects_data'):
             delattr(self, 'projects_data')
-        self.bar_figure.clear()
-        self.pie_figure.clear()
-        self.line_figure.clear()
-        self.bar_canvas.draw()
-        self.pie_canvas.draw()
-        self.line_canvas.draw()
 
     def on_header_clicked(self, logical_index):
         """表头点击事件处理"""
