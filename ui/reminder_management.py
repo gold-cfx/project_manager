@@ -54,20 +54,14 @@ class ReminderManagement(QWidget):
 
         # 创建提醒列表
         self.reminder_table = QTableWidget()
-        self.reminder_table.setColumnCount(8)
+        self.reminder_table.setColumnCount(9)
         self.reminder_table.setHorizontalHeaderLabels([
-            'ID', '项目名称', '提醒类型', '提醒开始日期', '提前天数', '提醒方式', '状态', '创建时间'
+            'ID', '项目名称', '提醒类型', '提醒开始日期', '提前天数', '提醒方式', '状态', '创建时间', '提醒内容'
         ])
         # 隐藏ID列
         self.reminder_table.setColumnHidden(0, True)
         self.reminder_table.horizontalHeader().setStretchLastSection(True)
         main_layout.addWidget(self.reminder_table)
-
-    # 移除了load_projects方法，因为不再需要项目选择功能
-
-    # 移除了load_reminder_types方法，因为不再需要提醒类型选择功能
-
-    # 移除了load_reminder_ways方法，因为不再需要提醒方式选择功能
 
     def load_reminders(self):
         # 加载提醒列表
@@ -88,6 +82,13 @@ class ReminderManagement(QWidget):
             self.reminder_table.setItem(row, 5, QTableWidgetItem(reminder.reminder_way))
             self.reminder_table.setItem(row, 6, QTableWidgetItem(reminder.status))
             self.reminder_table.setItem(row, 7, QTableWidgetItem(reminder.create_time.strftime('%Y-%m-%d %H:%M:%S')))
+
+            # 显示提醒内容，默认截取前5个字符
+            if reminder.content:
+                display_content = reminder.content[:20] + "..." if len(reminder.content) > 20 else reminder.content
+            else:
+                display_content = ''
+            self.reminder_table.setItem(row, 8, QTableWidgetItem(display_content))
 
             # 设置未读提醒的样式
             if reminder.status == '未读':

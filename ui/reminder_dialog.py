@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (
 from logic.project_logic import ProjectLogic
 from logic.reminder_logic import ReminderLogic
 from models.reminder import ReminderType, ReminderWay
-
+from PyQt5.QtWidgets import QLabel
 
 class BaseReminderDialog(QDialog):
     """提醒对话框基类，抽离公共逻辑"""
@@ -43,16 +43,20 @@ class BaseReminderDialog(QDialog):
         # 提醒类型
         self.reminder_type_combo = QComboBox()
         form_layout.addRow('提醒类型 *', self.reminder_type_combo)
-        # 连接信号槽，监听提醒类型变化
-        self.reminder_type_combo.currentTextChanged.connect(self.on_reminder_type_changed)
+
 
         # 提醒基准时间（默认隐藏）
         self.reminder_base_date_edit = QDateEdit()
         self.reminder_base_date_edit.setCalendarPopup(True)
         self.reminder_base_date_edit.setDisplayFormat('yyyy-MM-dd')
         # 将日期选择框添加到布局，但默认隐藏
-        self.base_date_row = form_layout.addRow('提醒基准时间（自定义情况下使用）', self.reminder_base_date_edit)
+        self.base_date_label = QLabel('提醒基准时间（自定义情况下使用）')
+        form_layout.addRow(self.base_date_label, self.reminder_base_date_edit)
         self.reminder_base_date_edit.hide()
+        self.base_date_label.hide()
+
+        # 连接信号槽，监听提醒类型变化
+        self.reminder_type_combo.currentTextChanged.connect(self.on_reminder_type_changed)
 
         # 提前提醒天数
         self.days_before_spin = QSpinBox()
@@ -109,15 +113,18 @@ class BaseReminderDialog(QDialog):
 
     def on_reminder_type_changed(self, text):
         """处理提醒类型变化，显示或隐藏提醒基准时间"""
+        
         if text == ReminderType.CUSTOM.value:
             base_date = datetime.strptime("2000-01-01", '%Y-%m-%d').date()
             if self.reminder_base_date_edit.date() == QDate(base_date.year, base_date.month, base_date.day):
                 q_date = QDate.currentDate()
                 self.reminder_base_date_edit.setDate(q_date)
             self.reminder_base_date_edit.show()
+            self.base_date_label.show()  # 直接显示标签
         else:
             self.reminder_base_date_edit.hide()
-
+            self.base_date_label.hide()  # 直接隐藏标签
+        
         # 调整对话框大小以适应控件显示状态
         self.adjustSize()
 
