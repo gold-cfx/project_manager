@@ -11,15 +11,14 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (
     QWidget, QFormLayout, QVBoxLayout, QHBoxLayout, QLabel,
     QLineEdit, QDateEdit, QComboBox, QPushButton, QTableWidget, QTableWidgetItem,
-    QGroupBox, QMessageBox, QSplitter, QFileDialog, QHeaderView, QLayout
+    QGroupBox, QMessageBox, QSplitter, QFileDialog, QHeaderView, QDialog
 )
 from matplotlib import pyplot as plt
 
-from logic.query_logic import QueryLogic
 from logic.project_logic import ProjectLogic
-from models.reminder import ReminderCreate
-from ui.data_editor import ProjectEditorDialog
+from logic.query_logic import QueryLogic
 from ui.chart_dialog import ChartDialog
+from ui.data_editor import ProjectEditorDialog
 
 # 动态导入其他对话框，避免循环依赖
 
@@ -38,6 +37,9 @@ class ProjectQuery(QWidget):
         self.load_project_status()
         self.load_funding_units()
         self.load_project_levels()
+        self.load_departments()
+        self.load_project_sources()
+        self.load_project_types()
         self.select_all = False
 
     def init_ui(self):
@@ -55,7 +57,7 @@ class ProjectQuery(QWidget):
 
         # 创建查询条件组
         query_group = QGroupBox('查询条件')
-        
+
         # 创建第一个FormLayout
         query_layout1 = QFormLayout()
         # 创建第二个FormLayout
@@ -67,7 +69,7 @@ class ProjectQuery(QWidget):
         # query_layout2.setHorizontalSpacing(10)
         # query_layout1.setSizeConstraint(QLayout.SetMinAndMaxSize)
         # query_layout2.setSizeConstraint(QLayout.SetMinAndMaxSize)
-        
+
         # 项目名称
         self.project_name_edit = QLineEdit()
         self.project_name_edit.setPlaceholderText('请输入项目名称关键词')
@@ -87,8 +89,16 @@ class ProjectQuery(QWidget):
         self.level_combo = QComboBox()
         self.level_combo.addItem('全部')
         query_layout2.addRow('课题级别', self.level_combo)
-        
 
+        # 科室
+        self.department_combo = QComboBox()
+        self.department_combo.addItem('全部')
+        query_layout1.addRow('科室', self.department_combo)
+
+        # 项目来源
+        self.project_source_combo = QComboBox()
+        self.project_source_combo.addItem('全部')
+        query_layout2.addRow('项目来源', self.project_source_combo)
 
         # 开始时间范围 (项目在该时间范围内开始)
         start_range_layout = QHBoxLayout()
@@ -141,6 +151,38 @@ class ProjectQuery(QWidget):
         end_range_layout.addWidget(self.end_quick_combo)
 
         query_layout2.addRow('结束时间范围', end_range_layout)
+
+        # 立项年度范围
+        approval_year_layout = QHBoxLayout()
+        self.approval_year_from = QDateEdit()
+        self.approval_year_from.setCalendarPopup(True)
+        self.approval_year_from.setDisplayFormat('yyyy')
+        self.approval_year_from.setDate(QDate.currentDate().addYears(-10))
+
+        self.approval_year_to = QDateEdit()
+        self.approval_year_to.setCalendarPopup(True)
+        self.approval_year_to.setDisplayFormat('yyyy')
+        self.approval_year_to.setDate(QDate.currentDate().addYears(10))
+
+        # 立项年度快速选择
+        self.approval_year_quick_combo = QComboBox()
+        self.approval_year_quick_combo.addItems([
+            '自定义', '近5年', '近10年', '近15年', '2020年至今'
+        ])
+        self.approval_year_quick_combo.currentIndexChanged.connect(
+            lambda index: self.on_approval_year_quick_changed(index)
+        )
+
+        approval_year_layout.addWidget(self.approval_year_from)
+        approval_year_layout.addWidget(QLabel('~'))
+        approval_year_layout.addWidget(self.approval_year_to)
+        approval_year_layout.addWidget(self.approval_year_quick_combo)
+        query_layout1.addRow('立项年度范围', approval_year_layout)
+
+        # 项目类型
+        self.project_type_combo = QComboBox()
+        self.project_type_combo.addItem('全部')
+        query_layout2.addRow('项目类型', self.project_type_combo)
         # 项目状态
         self.status_combo = QComboBox()
         self.status_combo.addItem('全部')
@@ -151,7 +193,7 @@ class ProjectQuery(QWidget):
         h_layout.addLayout(query_layout1)
         h_layout.addLayout(query_layout2)
         query_group.setLayout(h_layout)
-        
+
         main_layout.addWidget(query_group)
 
         # 创建查询按钮区域
@@ -166,23 +208,6 @@ class ProjectQuery(QWidget):
         btn_layout.addWidget(reset_btn)
 
         main_layout.addLayout(btn_layout)
-
-        # 创建功能按钮区域
-        action_btn_layout = QHBoxLayout()
-
-        reminder_btn = QPushButton('添加提醒')
-        reminder_btn.clicked.connect(self.add_reminder)
-        action_btn_layout.addWidget(reminder_btn)
-
-        delete_btn = QPushButton('一键删除')
-        delete_btn.clicked.connect(self.batch_delete)
-        action_btn_layout.addWidget(delete_btn)
-
-        export_btn = QPushButton('数据导出')
-        export_btn.clicked.connect(self.export_results)
-        action_btn_layout.addWidget(export_btn)
-
-        main_layout.addLayout(action_btn_layout)
 
         # 创建结果展示区域
         self.result_splitter = QSplitter(Qt.Vertical)
@@ -205,15 +230,29 @@ class ProjectQuery(QWidget):
         self.result_table.itemClicked.connect(self.on_item_clicked)
         self.result_splitter.addWidget(self.result_table)
 
+        # 创建功能按钮区域
+        action_btn_layout = QHBoxLayout()
+
+        reminder_btn = QPushButton('添加提醒')
+        reminder_btn.clicked.connect(self.add_reminder)
+        action_btn_layout.addWidget(reminder_btn)
+
+        delete_btn = QPushButton('一键删除')
+        delete_btn.clicked.connect(self.batch_delete)
+        action_btn_layout.addWidget(delete_btn)
+
+        export_btn = QPushButton('数据导出')
+        export_btn.clicked.connect(self.export_results)
+        action_btn_layout.addWidget(export_btn)
+
         # 添加图表按钮
-        chart_btn_layout = QHBoxLayout()
         chart_btn = QPushButton('根据查询结果显示统计图表')
         chart_btn.clicked.connect(self.show_chart_dialog)
-        chart_btn_layout.addWidget(chart_btn)
-        chart_btn_layout.addStretch()
-        main_layout.addLayout(chart_btn_layout)
+        action_btn_layout.addWidget(chart_btn)
+        action_btn_layout.addStretch()
 
         main_layout.addWidget(self.result_splitter)
+        main_layout.addLayout(action_btn_layout)
 
     def load_project_status(self):
         # 加载项目状态
@@ -230,11 +269,29 @@ class ProjectQuery(QWidget):
         from models.project import ProjectLevel
         self.level_combo.addItems([status.value for status in ProjectLevel])
 
+    def load_departments(self):
+        # 加载科室
+        departments = self.query_logic.get_all_departments()
+        self.department_combo.addItems(departments)
+
+    def load_project_sources(self):
+        # 加载项目来源
+        sources = self.query_logic.get_all_project_sources()
+        self.project_source_combo.addItems(sources)
+
+    def load_project_types(self):
+        # 加载项目类型
+        types = self.query_logic.get_all_project_types()
+        self.project_type_combo.addItems(types)
+
     def collect_query_conditions(self):
         # 收集查询条件
         conditions = {
             'project_name': self.project_name_edit.text(),
             'leader': self.leader_edit.text(),
+            'department': self.department_combo.currentText() if self.department_combo.currentText() != '全部' else '',
+            'project_source': self.project_source_combo.currentText() if self.project_source_combo.currentText() != '全部' else '',
+            'project_type': self.project_type_combo.currentText() if self.project_type_combo.currentText() != '全部' else '',
             'funding_unit': self.funding_unit_combo.currentText() if self.funding_unit_combo.currentText() != '全部' else '',
             'level': self.level_combo.currentText() if self.level_combo.currentText() != '全部' else '',
             'status': self.status_combo.currentText() if self.status_combo.currentText() != '全部' else ''
@@ -263,6 +320,18 @@ class ProjectQuery(QWidget):
             conditions['end_date_ge'] = end_from
         if end_to:
             conditions['end_date_le'] = end_to
+
+        # 处理立项年度范围
+        approval_year_from = ''
+        approval_year_to = ''
+        if self.approval_year_from.date().isValid():
+            approval_year_from = self.approval_year_from.date().toString('yyyy')
+        if self.approval_year_to.date().isValid():
+            approval_year_to = self.approval_year_to.date().toString('yyyy')
+        if approval_year_from:
+            conditions['approval_year_ge'] = approval_year_from
+        if approval_year_to:
+            conditions['approval_year_le'] = approval_year_to
 
         return conditions
 
@@ -319,8 +388,6 @@ class ProjectQuery(QWidget):
             self.result_table.setItem(row, 12, QTableWidgetItem(project.get('end_date', '')))
             self.result_table.setItem(row, 13, QTableWidgetItem(project.get('status', '')))
 
-
-
         # 设置列宽
         self.result_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.result_table.horizontalHeader().setSectionResizeMode(13, QHeaderView.ResizeToContents)
@@ -344,8 +411,6 @@ class ProjectQuery(QWidget):
         # 创建并显示图表弹窗
         chart_dialog = ChartDialog(self, self.projects_data)
         chart_dialog.exec_()
-
-
 
     def on_date_quick_changed(self, index, date_type):
         current_date = QDate.currentDate()
@@ -389,11 +454,27 @@ class ProjectQuery(QWidget):
             from_edit.setDate(current_date)
             to_edit.setDate(current_date.addMonths(6))
 
+    def on_approval_year_quick_changed(self, index):
+        current_date = QDate.currentDate()
+        from_edit = self.approval_year_from
+        to_edit = self.approval_year_to
 
-
-
-
-
+        if index == 0:  # 自定义
+            # 清除日期设置，允许用户手动选择
+            from_edit.setDate(current_date.addYears(-10))
+            to_edit.setDate(current_date.addYears(10))
+        elif index == 1:  # 近5年
+            from_edit.setDate(current_date.addYears(-5))
+            to_edit.setDate(current_date)
+        elif index == 2:  # 近10年
+            from_edit.setDate(current_date.addYears(-10))
+            to_edit.setDate(current_date)
+        elif index == 3:  # 近15年
+            from_edit.setDate(current_date.addYears(-15))
+            to_edit.setDate(current_date)
+        elif index == 4:  # 2020年至今
+            from_edit.setDate(QDate(2020, 1, 1))
+            to_edit.setDate(current_date)
 
     def reset_query(self):
         """重置查询条件"""
@@ -406,11 +487,16 @@ class ProjectQuery(QWidget):
         self.start_date_to.setDate(QDate.currentDate().addYears(10))
         self.end_date_from.setDate(QDate.currentDate().addYears(-10))
         self.end_date_to.setDate(QDate.currentDate().addYears(10))
+        self.approval_year_from.setDate(QDate.currentDate().addYears(-10))
+        self.approval_year_to.setDate(QDate.currentDate().addYears(10))
 
         # 重置下拉框
         self.funding_unit_combo.setCurrentIndex(0)
         self.level_combo.setCurrentIndex(0)
         self.status_combo.setCurrentIndex(0)
+        self.department_combo.setCurrentIndex(0)
+        self.project_source_combo.setCurrentIndex(0)
+        self.project_type_combo.setCurrentIndex(0)
 
         # 清空结果表格
         self.result_table.setRowCount(0)
@@ -554,7 +640,8 @@ class ProjectQuery(QWidget):
                 for project_id in self.selected_rows:
                     if self.project_logic.delete_project(project_id):
                         success_count += 1
-                QMessageBox.information(self, '成功', f'成功删除{success_count}个项目，失败{len(self.selected_rows)-success_count}个项目')
+                QMessageBox.information(self, '成功',
+                                        f'成功删除{success_count}个项目，失败{len(self.selected_rows) - success_count}个项目')
                 # 重新查询以更新结果
                 self.query_projects()
             except Exception as e:

@@ -36,6 +36,21 @@ class QueryLogic:
                 sql += " AND leader LIKE %s"
                 params.append(f"%{conditions['leader']}%")
 
+            # 处理科室条件
+            if conditions.get('department'):
+                sql += " AND department = %s"
+                params.append(conditions['department'])
+
+            # 处理项目来源条件
+            if conditions.get('project_source'):
+                sql += " AND project_source = %s"
+                params.append(conditions['project_source'])
+
+            # 处理项目类型条件
+            if conditions.get('project_type'):
+                sql += " AND project_type = %s"
+                params.append(conditions['project_type'])
+
             # 处理开始日期条件
             if conditions.get('start_date_ge'):
                 sql += " AND start_date >= %s"
@@ -64,6 +79,14 @@ class QueryLogic:
                 sql += " AND status = %s"
                 params.append(conditions['status'])
 
+            # 处理立项年度条件
+            if conditions.get('approval_year_ge'):
+                sql += " AND approval_year >= %s"
+                params.append(conditions['approval_year_ge'])
+            if conditions.get('approval_year_le'):
+                sql += " AND approval_year <= %s"
+                params.append(conditions['approval_year_le'])
+
             # 添加排序
             sql += " ORDER BY start_date DESC"
 
@@ -78,6 +101,39 @@ class QueryLogic:
 
         def operation(cursor):
             sql = "SELECT DISTINCT funding_unit FROM projects ORDER BY funding_unit"
+            cursor.execute(sql)
+            return [item[0] for item in cursor.fetchall()]
+
+        result = with_db_connection(operation, cursor_type=Cursor)
+        return result if result is not None else []
+
+    def get_all_departments(self):
+        """获取所有科室"""
+
+        def operation(cursor):
+            sql = "SELECT DISTINCT department FROM projects ORDER BY department"
+            cursor.execute(sql)
+            return [item[0] for item in cursor.fetchall()]
+
+        result = with_db_connection(operation, cursor_type=Cursor)
+        return result if result is not None else []
+
+    def get_all_project_sources(self):
+        """获取所有项目来源"""
+
+        def operation(cursor):
+            sql = "SELECT DISTINCT project_source FROM projects ORDER BY project_source"
+            cursor.execute(sql)
+            return [item[0] for item in cursor.fetchall()]
+
+        result = with_db_connection(operation, cursor_type=Cursor)
+        return result if result is not None else []
+
+    def get_all_project_types(self):
+        """获取所有项目类型"""
+
+        def operation(cursor):
+            sql = "SELECT DISTINCT project_type FROM projects ORDER BY project_type"
             cursor.execute(sql)
             return [item[0] for item in cursor.fetchall()]
 

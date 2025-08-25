@@ -67,6 +67,7 @@ def get_connection():
 
 from utils.decorators import format_datetime_in_result
 
+
 def with_db_connection(operation, cursor_type=DictCursor, commit=True):
     """
     执行数据库操作的公共函数，封装连接创建、游标初始化、异常处理和资源释放
@@ -79,6 +80,7 @@ def with_db_connection(operation, cursor_type=DictCursor, commit=True):
     Returns:
         数据库操作的结果
     """
+
     @format_datetime_in_result
     def execute_operation():
         conn = get_connection()
@@ -95,7 +97,7 @@ def with_db_connection(operation, cursor_type=DictCursor, commit=True):
         finally:
             if cursor: cursor.close()
             if conn: conn.close()
-    
+
     return execute_operation()
 
 
@@ -190,15 +192,15 @@ def init_database():
         cursor.execute(create_system_config_table)
 
         create_help_info_table = f"""
-                CREATE TABLE IF NOT EXISTS help_docs (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    title VARCHAR(100) NOT NULL,
-                    content TEXT NOT NULL,
-                    version VARCHAR(20) NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-                )
-            """
+            CREATE TABLE IF NOT EXISTS help_docs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                title VARCHAR(100) NOT NULL,
+                content TEXT NOT NULL,
+                version VARCHAR(20) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        """
         cursor.execute(create_help_info_table)
 
         conn.commit()
