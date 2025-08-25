@@ -189,6 +189,18 @@ def init_database():
         """
         cursor.execute(create_system_config_table)
 
+        create_help_info_table = f"""
+                CREATE TABLE IF NOT EXISTS help_docs (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    title VARCHAR(100) NOT NULL,
+                    content TEXT NOT NULL,
+                    version VARCHAR(20) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            """
+        cursor.execute(create_help_info_table)
+
         conn.commit()
         print("数据库初始化成功")
         return True

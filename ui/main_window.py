@@ -160,8 +160,7 @@ class MainWindow(QMainWindow):
     def show_help_document(self):
         # 显示帮助文档界面
         self.clear_content_area()
-        help_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'help.md')
-        self.help_document = HelpDocument(help_file_path)
+        self.help_document = HelpDocument()
         self.content_layout.addWidget(self.help_document)
         self.help_document.show()
         self.status_bar.showMessage('帮助文档')

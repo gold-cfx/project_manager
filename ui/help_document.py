@@ -3,17 +3,18 @@
 """
 科研项目管理系统 - 帮助文档界面
 """
-import os
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-                            QTextEdit, QPushButton, QMessageBox, QFileDialog)
+                            QTextEdit, QPushButton, QMessageBox)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
+from data.help_doc_dao import HelpDocDAO
+from models.help_doc import HelpDocUpdate
 
 
 class HelpDocument(QWidget):
-    def __init__(self, help_file_path):
+    def __init__(self):
         super().__init__()
-        self.help_file_path = help_file_path
+        self.help_doc_dao = HelpDocDAO()
         self.init_ui()
         self.load_help_content()
 
@@ -55,25 +56,51 @@ class HelpDocument(QWidget):
         main_layout.addLayout(button_layout)
 
     def load_help_content(self):
-        """加载帮助文档内容"""
+        """从数据库加载帮助文档内容"""
         try:
-            if os.path.exists(self.help_file_path):
-                with open(self.help_file_path, 'r', encoding='utf-8') as file:
-                    content = file.read()
-                    self.editor.setText(content)
+            help_doc = self.help_doc_dao.get_latest()
+            if help_doc:
+                self.editor.setText(help_doc.content)
+                self.current_doc_id = help_doc.id
             else:
-                QMessageBox.warning(self, "警告", f"帮助文档文件不存在：{self.help_file_path}")
-                self.editor.setText("# 帮助文档\n## 使用说明\n\n## 数据存储说明\n\n## 使用注意事项\n")
+                QMessageBox.warning(self, "警告", "没有找到帮助文档数据")
+                self.editor.setText("帮助文档\n使用说明\n\n数据存储说明\n\n使用注意事项\n")
+                # 尝试初始化默认文档
+                self.current_doc_id = self.help_doc_dao.initialize_default_doc()
         except Exception as e:
             QMessageBox.critical(self, "错误", f"加载帮助文档失败：{str(e)}")
 
     def save_help_content(self):
-        """保存帮助文档内容"""
+        """保存帮助文档内容到数据库"""
         try:
             content = self.editor.toPlainText()
-            with open(self.help_file_path, 'w', encoding='utf-8') as file:
-                file.write(content)
-            QMessageBox.information(self, "成功", "帮助文档保存成功！")
+            
+            # 创建更新模型
+            help_doc_update = HelpDocUpdate(
+                content=content,
+                version="1.0"  # 这里可以根据需要更新版本号
+            )
+            
+            if hasattr(self, 'current_doc_id') and self.current_doc_id > 0:
+                # 更新现有文档
+                if self.help_doc_dao.update(self.current_doc_id, help_doc_update):
+                    QMessageBox.information(self, "成功", "帮助文档保存成功！")
+                else:
+                    QMessageBox.warning(self, "警告", "帮助文档更新失败")
+            else:
+                # 创建新文档
+                from models.help_doc import HelpDocCreate
+                help_doc_create = HelpDocCreate(
+                    title="系统帮助文档",
+                    content=content,
+                    version="1.0"
+                )
+                new_id = self.help_doc_dao.insert(help_doc_create)
+                if new_id > 0:
+                    self.current_doc_id = new_id
+                    QMessageBox.information(self, "成功", "帮助文档创建成功！")
+                else:
+                    QMessageBox.warning(self, "警告", "帮助文档创建失败")
         except Exception as e:
             QMessageBox.critical(self, "错误", f"保存帮助文档失败：{str(e)}")
 
