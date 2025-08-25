@@ -13,6 +13,7 @@ from PyQt5.QtGui import QIcon, QFont
 from .project_registration import ProjectRegistration
 from .project_query import ProjectQuery
 from .reminder_management import ReminderManagement
+from .system_settings import SystemSettings
 
 
 class MainWindow(QMainWindow):
@@ -146,6 +147,14 @@ class MainWindow(QMainWindow):
         self.reminder_management.show()
         self.status_bar.showMessage('提醒管理')
 
+    def show_system_settings(self):
+        # 显示系统设置界面
+        self.clear_content_area()
+        self.system_settings = SystemSettings()
+        self.content_layout.addWidget(self.system_settings)
+        self.system_settings.show()
+        self.status_bar.showMessage('系统设置')
+
     def on_menu_clicked(self, item):
         # 处理菜单点击事件
         data = item.data(Qt.UserRole)
@@ -156,6 +165,6 @@ class MainWindow(QMainWindow):
         elif data == 'reminder_management':
             self.show_reminder_management()
         elif data == 'system_settings':
-            self.status_bar.showMessage('系统设置 - 开发中')
+            self.show_system_settings()
         elif data == 'help_doc':
             self.status_bar.showMessage('帮助文档 - 开发中')
