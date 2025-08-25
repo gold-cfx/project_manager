@@ -41,7 +41,7 @@ class ReminderLogic:
         elif reminder_data.reminder_type == ReminderType.PROJECT_START:
             end_date = project.start_date
         elif reminder_data.reminder_type == ReminderType.CUSTOM:
-            end_date = reminder_data.due_date
+            end_date = reminder_data.start_date
         days_before = reminder_data.days_before
         
         # 如果end_date是字符串，转换为日期对象
@@ -54,7 +54,7 @@ class ReminderLogic:
         
         # 设置提醒日期
         reminder_data_dict = reminder_data.dict()
-        reminder_data_dict['due_date'] = reminder_date.strftime('%Y-%m-%d')
+        reminder_data_dict['start_date'] = reminder_date.strftime('%Y-%m-%d')
         reminder_data_dict['status'] = ReminderStatus.UNREAD
         
         # 创建提醒
@@ -98,8 +98,8 @@ class ReminderLogic:
         
         # 更新提醒日期
         reminder_data_dict = reminder_data.dict(exclude_unset=True, exclude_none=True)
-        # 确保due_date字段存在，即使在原始数据中没有提供
-        reminder_data_dict['due_date'] = reminder_date.strftime('%Y-%m-%d')
+        # 确保start_date字段存在，即使在原始数据中没有提供
+        reminder_data_dict['start_date'] = reminder_date.strftime('%Y-%m-%d')
         reminder_data_dict['status'] = ReminderStatus.UNREAD
         
         # 更新提醒
@@ -157,10 +157,10 @@ class ReminderLogic:
         return self.reminder_dao.mark_as_read(reminder_id)
     
     def check_due_reminders(self) -> List[Reminder]:
-        """检查到期提醒
+        """检查开始日期提醒
         
         Returns:
-            List[Reminder]: 到期提醒列表
+            List[Reminder]: 开始日期提醒列表
         """
         today = datetime.now().strftime('%Y-%m-%d')
         return self.reminder_dao.get_upcoming_reminders(today)

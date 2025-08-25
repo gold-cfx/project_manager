@@ -614,7 +614,7 @@ class ProjectQuery(QWidget):
                             'days_before': reminder_data['days_before'],
                             'reminder_way': reminder_data['reminder_way'],
                             'content': reminder_data['content'],
-                            'due_date': reminder_data['due_date']  # 添加due_date字段
+                            'start_date': reminder_data['start_date']  # 添加start_date字段
                         }
                         if reminder_logic.create_reminder(reminder_create_data):
                             success_count += 1

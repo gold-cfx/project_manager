@@ -46,12 +46,12 @@ class DateUtils:
             return 0
 
     @staticmethod
-    def get_due_date(end_date, days_before):
-        """计算到期提醒日期"""
+    def get_start_date(end_date, days_before):
+        """计算开始日期提醒日期"""
         try:
             end = datetime.strptime(end_date, '%Y-%m-%d')
-            due_date = end - timedelta(days=days_before)
-            return due_date.strftime('%Y-%m-%d')
+            start_date = end - timedelta(days=days_before)
+            return start_date.strftime('%Y-%m-%d')
         except ValueError:
             return ''
 
@@ -82,6 +82,6 @@ def calculate_duration(start_date, end_date):
     return DateUtils.calculate_duration(start_date, end_date)
 
 
-# 获取到期日期
-def get_due_date(end_date, days_before):
-    return DateUtils.get_due_date(end_date, days_before)
+# 获取开始日期
+def get_start_date(end_date, days_before):
+    return DateUtils.get_start_date(end_date, days_before)

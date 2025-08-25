@@ -59,7 +59,7 @@ class ReminderDAO:
         """获取所有提醒"""
 
         def operation(cursor):
-            sql = f"SELECT * FROM {self.table_name} ORDER BY due_date ASC"
+            sql = f"SELECT * FROM {self.table_name} ORDER BY start_date ASC"
             cursor.execute(sql)
             return cursor.fetchall()
 
@@ -72,7 +72,7 @@ class ReminderDAO:
         """获取未读提醒"""
 
         def operation(cursor):
-            sql = f"SELECT * FROM {self.table_name} WHERE status = %s ORDER BY due_date ASC"
+            sql = f"SELECT * FROM {self.table_name} WHERE status = %s ORDER BY start_date ASC"
             cursor.execute(sql, (ReminderStatus.UNREAD.value,))
             return cursor.fetchall()
 
@@ -121,7 +121,7 @@ class ReminderDAO:
         """根据项目ID获取提醒"""
 
         def operation(cursor):
-            sql = f"SELECT * FROM {self.table_name} WHERE project_id = %s ORDER BY due_date ASC"
+            sql = f"SELECT * FROM {self.table_name} WHERE project_id = %s ORDER BY start_date ASC"
             cursor.execute(sql, (project_id,))
             return cursor.fetchall()
 
@@ -131,13 +131,13 @@ class ReminderDAO:
         return []
 
     def get_upcoming_reminders(self, days: int = 7) -> List[Reminder]:
-        """获取即将到期的提醒"""
+        """获取即将开始日期的提醒"""
 
         def operation(cursor):
             sql = f"""
                 SELECT * FROM {self.table_name} 
-                WHERE due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL %s DAY)
-                ORDER BY due_date ASC
+                WHERE start_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL %s DAY)
+                ORDER BY start_date ASC
             """
             cursor.execute(sql, (days,))
             return cursor.fetchall()

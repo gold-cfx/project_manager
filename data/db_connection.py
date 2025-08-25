@@ -171,7 +171,7 @@ def init_database():
                 days_before INT NOT NULL,
                 reminder_way VARCHAR(20) NOT NULL,
                 content TEXT,
-                due_date DATE NOT NULL,
+                start_date DATE NOT NULL,
                 status VARCHAR(10) NOT NULL DEFAULT '未读',
                 create_time TIMESTAMP NOT NULL,
                 FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE

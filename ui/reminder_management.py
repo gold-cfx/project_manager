@@ -77,7 +77,7 @@ class ReminderManagement(QWidget):
             self.reminder_table.setItem(row, 0, QTableWidgetItem(str(reminder.id)))
             self.reminder_table.setItem(row, 1, QTableWidgetItem(reminder.project_name))
             self.reminder_table.setItem(row, 2, QTableWidgetItem(reminder.reminder_type))
-            self.reminder_table.setItem(row, 3, QTableWidgetItem(reminder.due_date.strftime('%Y-%m-%d')))
+            self.reminder_table.setItem(row, 3, QTableWidgetItem(reminder.start_date.strftime('%Y-%m-%d')))
             self.reminder_table.setItem(row, 4, QTableWidgetItem(str(reminder.days_before)))
             self.reminder_table.setItem(row, 5, QTableWidgetItem(reminder.reminder_way))
             self.reminder_table.setItem(row, 6, QTableWidgetItem(reminder.status))

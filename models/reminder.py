@@ -42,15 +42,8 @@ class ReminderBase(BaseDataModel):
     days_before: int = Field(0, description="提前天数", ge=0)
     reminder_way: ReminderWay = Field(ReminderWay.SYSTEM, description="提醒方式")
     content: str = Field("", description="提醒内容", max_length=500)
-    due_date: date = Field(..., description="到期日期")
+    start_date: date = Field(..., description="开始日期")
     status: ReminderStatus = Field(ReminderStatus.UNREAD, description="提醒状态")
-    
-    @validator('due_date')
-    def validate_due_date(cls, v):
-        """验证到期日期"""
-        if v < date.today():
-            raise ValueError('到期日期不能早于今天')
-        return v
     
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典，用于数据库操作"""
@@ -89,6 +82,13 @@ class ReminderBase(BaseDataModel):
 class ReminderCreate(ReminderBase):
     """创建提醒模型"""
     create_time: datetime = Field(default_factory=datetime.now, description="创建时间")
+    
+    @validator('start_date')
+    def validate_start_date(cls, v):
+        """验证开始日期"""
+        if v < date.today():
+            raise ValueError('提醒开始日期不能早于今天')
+        return v
 
 
 class ReminderUpdate(BaseDataModel):
@@ -99,8 +99,15 @@ class ReminderUpdate(BaseDataModel):
     days_before: Optional[int] = None
     reminder_way: Optional[ReminderWay] = None
     content: Optional[str] = None
-    due_date: Optional[date] = None
+    start_date: Optional[date] = None
     status: Optional[ReminderStatus] = None
+    
+    @validator('start_date')
+    def validate_start_date(cls, v):
+        """验证开始日期"""
+        if v and v < date.today():
+            raise ValueError('提醒开始日期不能早于今天')
+        return v
 
 
 class Reminder(ReminderBase):

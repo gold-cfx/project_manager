@@ -8,6 +8,7 @@ import os
 from PyQt5.QtWidgets import QApplication
 from ui.main_window import MainWindow
 from data.db_connection import init_database
+from logic.auto_reminder import auto_reminder
 
 # 设置中文字体支持
 import matplotlib
@@ -34,6 +35,9 @@ def main():
     # 创建主窗口
     main_window = MainWindow()
     main_window.show()
+    
+    # 检查并显示自动提醒
+    auto_reminder.check_and_show_reminders()
 
     # 运行应用程序
     sys.exit(app.exec_())

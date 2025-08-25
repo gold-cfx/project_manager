@@ -184,14 +184,14 @@ class EditReminderDialog(BaseReminderDialog):
             # 设置提醒内容
             self.reminder_content_edit.setText(self.reminder_data.content)
             # 设置提醒基准时间（如果有）
-            if hasattr(self.reminder_data, 'due_date') and self.reminder_data.due_date:
+            if hasattr(self.reminder_data, 'start_date') and self.reminder_data.start_date:
                 from datetime import datetime
                 try:
                     # 尝试将日期字符串转换为QDate
-                    if isinstance(self.reminder_data.due_date, str):
-                        date_obj = datetime.strptime(self.reminder_data.due_date, '%Y-%m-%d').date()
+                    if isinstance(self.reminder_data.start_date, str):
+                        date_obj = datetime.strptime(self.reminder_data.start_date, '%Y-%m-%d').date()
                     else:
-                        date_obj = self.reminder_data.due_date
+                        date_obj = self.reminder_data.start_date
                     from PyQt5.QtCore import QDate
                     q_date = QDate(date_obj.year, date_obj.month, date_obj.day)
                     self.reminder_base_date_edit.setDate(q_date)
@@ -221,11 +221,11 @@ class EditReminderDialog(BaseReminderDialog):
             content=self.reminder_content_edit.toPlainText()
         )
 
-        # 如果是自定义类型，设置due_date
+        # 如果是自定义类型，设置start_date
         if reminder_type == ReminderType.CUSTOM:
             q_date = self.reminder_base_date_edit.date()
             date_str = q_date.toString('yyyy-MM-dd')
-            reminder_update.due_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            reminder_update.start_date = datetime.strptime(date_str, '%Y-%m-%d').date()
 
         return reminder_update
 
@@ -261,22 +261,22 @@ class BatchReminderDialog(BaseReminderDialog):
 
         reminder_type, reminder_way = self._get_selected_reminder_type_and_way()
 
-        # 设置一个默认的due_date（当前日期）
+        # 设置一个默认的start_date（当前日期）
         # 实际上，这个值会在ReminderLogic.create_reminder中被覆盖
         # 但我们需要提供一个有效值以通过验证
-        due_date = datetime.now().strftime('%Y-%m-%d')
+        start_date = datetime.now().strftime('%Y-%m-%d')
 
         # 如果是自定义类型，使用选择的基准时间
         if reminder_type == ReminderType.CUSTOM:
             q_date = self.reminder_base_date_edit.date()
-            due_date = q_date.toString('yyyy-MM-dd')
+            start_date = q_date.toString('yyyy-MM-dd')
 
-        # 返回字典，但使用正确的枚举值，并包含due_date
+        # 返回字典，但使用正确的枚举值，并包含start_date
         return {
             'project_ids': self.project_ids,
             'reminder_type': reminder_type,
             'days_before': self.days_before_spin.value(),
             'reminder_way': reminder_way,
             'content': self.reminder_content_edit.toPlainText(),
-            'due_date': due_date  # 添加due_date字段
+            'start_date': start_date  # 添加start_date字段
         }

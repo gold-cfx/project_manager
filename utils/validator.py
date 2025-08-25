@@ -94,7 +94,7 @@ class Validator:
     @staticmethod
     def is_valid_reminder_type(reminder_type):
         """验证提醒类型"""
-        valid_types = ['到期提醒', '里程碑提醒', '其他提醒']
+        valid_types = ['开始日期提醒', '里程碑提醒', '其他提醒']
         if reminder_type not in valid_types:
             return False, f"提醒类型必须是以下之一: {', '.join(valid_types)}"
         return True, "验证通过"
@@ -274,8 +274,8 @@ def validate_reminder_data(reminder_data):
     valid, msg = Validator.is_valid_reminder_way(reminder_data.get('reminder_way'))
     if not valid: errors.append(msg)
 
-    # 验证到期日期
-    valid, msg = Validator.is_valid_date(reminder_data.get('due_date'))
+    # 验证开始日期
+    valid, msg = Validator.is_valid_date(reminder_data.get('start_date'))
     if not valid: errors.append(msg)
 
     # 验证创建时间

@@ -15,12 +15,6 @@ from pydantic.generics import GenericModel
 T = TypeVar('T')
 
 
-class BaseResponse(GenericModel, Generic[T]):
-    """通用响应模型"""
-    code: int = Field(200, description="状态码")
-    message: str = Field("操作成功", description="消息")
-    data: Optional[T] = Field(None, description="数据")
-
 
 class DateTimeFormatterMixin:
     """日期时间格式化混合类"""
