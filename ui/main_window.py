@@ -4,6 +4,7 @@
 科研项目管理系统 - 主窗口
 """
 import sys
+import os
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QListWidget, QListWidgetItem, QFrame, QStatusBar, QToolBar
@@ -14,6 +15,7 @@ from .project_registration import ProjectRegistration
 from .project_query import ProjectQuery
 from .reminder_management import ReminderManagement
 from .system_settings import SystemSettings
+from .help_document import HelpDocument
 
 
 class MainWindow(QMainWindow):
@@ -155,6 +157,15 @@ class MainWindow(QMainWindow):
         self.system_settings.show()
         self.status_bar.showMessage('系统设置')
 
+    def show_help_document(self):
+        # 显示帮助文档界面
+        self.clear_content_area()
+        help_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'help.md')
+        self.help_document = HelpDocument(help_file_path)
+        self.content_layout.addWidget(self.help_document)
+        self.help_document.show()
+        self.status_bar.showMessage('帮助文档')
+
     def on_menu_clicked(self, item):
         # 处理菜单点击事件
         data = item.data(Qt.UserRole)
@@ -167,4 +178,4 @@ class MainWindow(QMainWindow):
         elif data == 'system_settings':
             self.show_system_settings()
         elif data == 'help_doc':
-            self.status_bar.showMessage('帮助文档 - 开发中')
+            self.show_help_document()
