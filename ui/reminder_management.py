@@ -3,16 +3,16 @@
 """
 科研项目管理系统 - 提醒管理界面
 """
-from PyQt5.QtWidgets import (
-    QWidget, QFormLayout, QGridLayout, QVBoxLayout, QHBoxLayout, QLabel,
-    QLineEdit, QDateEdit, QComboBox, QSpinBox, QPushButton, QTableWidget,
-    QTableWidgetItem, QGroupBox, QMessageBox, QDialog, QTextEdit
-)
-from ui.reminder_dialog import EditReminderDialog
-from PyQt5.QtCore import Qt, QDate
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+    QPushButton, QTableWidget,
+    QTableWidgetItem, QMessageBox, QDialog
+)
+
 from logic.reminder_logic import ReminderLogic
-from logic.project_logic import ProjectLogic
+from ui.reminder_dialog import EditReminderDialog
 
 
 class ReminderManagement(QWidget):
@@ -56,7 +56,7 @@ class ReminderManagement(QWidget):
         self.reminder_table = QTableWidget()
         self.reminder_table.setColumnCount(8)
         self.reminder_table.setHorizontalHeaderLabels([
-            'ID', '项目名称', '提醒类型', '到期日期', '提前天数', '提醒方式', '状态', '创建时间'
+            'ID', '项目名称', '提醒类型', '提醒开始日期', '提前天数', '提醒方式', '状态', '创建时间'
         ])
         # 隐藏ID列
         self.reminder_table.setColumnHidden(0, True)

@@ -17,16 +17,13 @@ class ReminderType(str, Enum):
     """提醒类型枚举"""
     PROJECT_START = "项目开始"
     PROJECT_END = "项目结束"
-    REPORT_SUBMISSION = "报告提交"
-    FUND_ARRIVAL = "经费到账"
     CUSTOM = "自定义"
 
 
 class ReminderWay(str, Enum):
     """提醒方式枚举"""
-    EMAIL = "邮件"
-    SMS = "短信"
     SYSTEM = "系统提醒"
+    EMAIL = "邮件(暂不支持)"
     ALL = "全部"
 
 

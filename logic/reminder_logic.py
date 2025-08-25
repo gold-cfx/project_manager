@@ -8,7 +8,7 @@ from typing import List, Optional, Dict, Any, Union
 
 from data.reminder_dao import ReminderDAO
 from data.project_dao import ProjectDAO
-from models.reminder import Reminder, ReminderCreate, ReminderUpdate, ReminderStatus
+from models.reminder import Reminder, ReminderCreate, ReminderUpdate, ReminderStatus, ReminderType
 from utils.decorators import validate_model_data, log_operation
 
 
@@ -36,7 +36,12 @@ class ReminderLogic:
             raise ValueError(f"项目ID {reminder_data.project_id} 不存在")
         
         # 计算提醒日期
-        end_date = project.end_date
+        if reminder_data.reminder_type == ReminderType.PROJECT_END:
+            end_date = project.end_date
+        elif reminder_data.reminder_type == ReminderType.PROJECT_START:
+            end_date = project.start_date
+        elif reminder_data.reminder_type == ReminderType.CUSTOM:
+            end_date = reminder_data.due_date
         days_before = reminder_data.days_before
         
         # 如果end_date是字符串，转换为日期对象
