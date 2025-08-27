@@ -3,15 +3,17 @@
 """
 科研项目管理系统 - 主程序入口
 """
-import sys
 import os
-from PyQt5.QtWidgets import QApplication
-from ui.main_window import MainWindow
-from data.db_connection import init_database
-from logic.auto_reminder import auto_reminder
+import sys
 
 # 设置中文字体支持
 import matplotlib
+from PyQt5.QtWidgets import QApplication
+
+from data.db_connection import init_database
+from file_server.start_server import start_file_server
+from logic.auto_reminder import auto_reminder
+from ui.main_window import MainWindow
 
 matplotlib.use('Qt5Agg')
 plt_font = {'family': 'SimHei', 'size': 10}
@@ -25,6 +27,12 @@ def main():
     # 初始化数据库
     init_database()
 
+    # 启动文件服务器
+    try:
+        start_file_server()
+    except Exception as e:
+        print(f"文件服务器启动失败: {str(e)}")
+
     # 创建应用程序
     app = QApplication(sys.argv)
 
@@ -35,7 +43,7 @@ def main():
     # 创建主窗口
     main_window = MainWindow()
     main_window.show()
-    
+
     # 检查并显示自动提醒
     auto_reminder.check_and_show_reminders()
 

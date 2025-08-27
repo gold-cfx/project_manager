@@ -3,9 +3,8 @@
 """
 科研项目管理系统 - 项目登记界面
 """
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox
-from PyQt5.QtGui import QFont
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QLabel, QMessageBox
+
 from ui.data_editor import ProjectEditor
 
 

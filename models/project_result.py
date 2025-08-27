@@ -6,9 +6,9 @@
 """
 import datetime
 from enum import Enum
-from typing import Optional, List, Dict, Any
+from typing import Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 
 class ProjectResultType(str, Enum):

@@ -3,10 +3,11 @@
 """
 科研项目管理系统 - 帮助文档界面
 """
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-                            QTextEdit, QPushButton, QMessageBox)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+                             QTextEdit, QPushButton, QMessageBox)
+
 from data.help_doc_dao import HelpDocDAO
 from models.help_doc import HelpDocUpdate
 
@@ -74,13 +75,13 @@ class HelpDocument(QWidget):
         """保存帮助文档内容到数据库"""
         try:
             content = self.editor.toPlainText()
-            
+
             # 创建更新模型
             help_doc_update = HelpDocUpdate(
                 content=content,
                 version="1.0"  # 这里可以根据需要更新版本号
             )
-            
+
             if hasattr(self, 'current_doc_id') and self.current_doc_id > 0:
                 # 更新现有文档
                 if self.help_doc_dao.update(self.current_doc_id, help_doc_update):

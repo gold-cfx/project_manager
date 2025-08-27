@@ -3,11 +3,12 @@
 """
 科研项目管理系统 - 项目数据访问对象
 """
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Dict, Any
+
+from pymysql.cursors import Cursor
 
 from data.db_connection import with_db_connection
 from models.project import Project, ProjectCreate, ProjectUpdate, ProjectStatus
-from pymysql.cursors import DictCursor, Cursor
 
 
 class ProjectDAO:
@@ -24,7 +25,7 @@ class ProjectDAO:
             # 使用模型的字段名和占位符
             fields = ProjectCreate.get_field_names()
             placeholders = ProjectCreate.get_sql_placeholders()
-            
+
             sql = f"""
                 INSERT INTO {self.table_name} (
                     {', '.join(fields)}
@@ -32,7 +33,7 @@ class ProjectDAO:
                     {placeholders}
                 )
             """
-            
+
             # 从模型获取参数值
             params = tuple(getattr(project_data, field) for field in fields)
             cursor.execute(sql, params)
@@ -75,17 +76,17 @@ class ProjectDAO:
             update_data = project_data.dict(exclude_unset=True, exclude_none=True)
             if not update_data:
                 return False
-                
+
             set_clause = ", ".join([f"{field} = %s" for field in update_data.keys()])
             values = list(update_data.values())
             values.append(project_id)  # 添加WHERE条件的参数
-            
+
             sql = f"""
                 UPDATE {self.table_name} SET
                     {set_clause}
                 WHERE id = %s
             """
-            
+
             cursor.execute(sql, tuple(values))
             return cursor.rowcount >= 0
 
@@ -123,20 +124,20 @@ class ProjectDAO:
             # 构建查询条件
             conditions = []
             params = []
-            
+
             for field, value in criteria.items():
                 if value is not None:
                     if field == 'status' and isinstance(value, ProjectStatus):
                         value = value.value
-                    
+
                     if isinstance(value, str) and '%' in value:
                         conditions.append(f"{field} LIKE %s")
                     else:
                         conditions.append(f"{field} = %s")
                     params.append(value)
-            
+
             where_clause = " AND ".join(conditions) if conditions else "1=1"
-            
+
             sql = f"SELECT * FROM {self.table_name} WHERE {where_clause} ORDER BY id DESC"
             cursor.execute(sql, tuple(params))
             return cursor.fetchall()

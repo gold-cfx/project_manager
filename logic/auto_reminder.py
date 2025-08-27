@@ -5,7 +5,7 @@
 import datetime
 from typing import List
 
-from PyQt5.QtWidgets import QMessageBox, QPushButton
+from PyQt5.QtWidgets import QMessageBox
 
 from logic.reminder_logic import ReminderLogic
 from models.reminder import Reminder
@@ -90,19 +90,19 @@ class AutoReminder:
             msg_box.setWindowTitle("项目提醒")
             msg_box.setText(message)
             msg_box.setIcon(QMessageBox.Information)
-            
+
             # 添加"下次继续提醒"按钮
             remind_later_btn = msg_box.addButton("下次继续提醒", QMessageBox.ActionRole)
-            
+
             # 添加"不再提醒"按钮
             remind_stop_btn = msg_box.addButton("不再提醒", QMessageBox.AcceptRole)
-            
+
             # 设置默认按钮
             msg_box.setDefaultButton(remind_later_btn)
-            
+
             # 显示消息框并获取用户选择
             msg_box.exec_()
-            
+
             # 根据用户选择处理单个提醒
             if msg_box.clickedButton() == remind_stop_btn:
                 # 用户选择"不再提醒"，标记当前提醒为已读

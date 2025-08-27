@@ -6,9 +6,9 @@
 """
 from datetime import date, datetime
 from enum import Enum
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any
 
-from pydantic import BaseModel, Field, validator
+from pydantic import Field, validator
 
 from models.base import BaseDataModel
 
@@ -44,35 +44,35 @@ class ReminderBase(BaseDataModel):
     content: str = Field("", description="提醒内容", max_length=500)
     start_date: date = Field(..., description="开始日期")
     status: ReminderStatus = Field(ReminderStatus.UNREAD, description="提醒状态")
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典，用于数据库操作"""
         return self.dict()
-    
+
     @classmethod
     def get_field_names(cls) -> List[str]:
         """获取所有字段名称"""
         return list(cls.__fields__.keys())
-    
+
     @classmethod
     def get_field_description(cls, field_name: str) -> str:
         """获取字段描述"""
         if field_name in cls.__fields__:
             return cls.__fields__[field_name].field_info.description
         return ""
-    
+
     @classmethod
     def get_field_type(cls, field_name: str) -> type:
         """获取字段类型"""
         if field_name in cls.__fields__:
             return cls.__fields__[field_name].outer_type_
         return None
-    
+
     @classmethod
     def get_sql_fields(cls) -> str:
         """获取SQL字段列表"""
         return ", ".join(cls.get_field_names())
-    
+
     @classmethod
     def get_sql_placeholders(cls) -> str:
         """获取SQL占位符"""
@@ -82,7 +82,7 @@ class ReminderBase(BaseDataModel):
 class ReminderCreate(ReminderBase):
     """创建提醒模型"""
     create_time: datetime = Field(default_factory=datetime.now, description="创建时间")
-    
+
     @validator('start_date')
     def validate_start_date(cls, v):
         """验证开始日期"""
@@ -101,7 +101,7 @@ class ReminderUpdate(BaseDataModel):
     content: Optional[str] = None
     start_date: Optional[date] = None
     status: Optional[ReminderStatus] = None
-    
+
     @validator('start_date')
     def validate_start_date(cls, v):
         """验证开始日期"""
@@ -114,6 +114,6 @@ class Reminder(ReminderBase):
     """提醒完整模型"""
     id: int = Field(..., description="提醒ID")
     create_time: datetime = Field(..., description="创建时间")
-    
+
     class Config:
         orm_mode = True

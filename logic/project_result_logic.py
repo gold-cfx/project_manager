@@ -13,10 +13,10 @@ from utils.decorators import validate_model_data, log_operation
 
 class ProjectResultLogic:
     """项目成果业务逻辑类"""
-    
+
     def __init__(self):
         self.project_result_dao = ProjectResultDAO()
-    
+
     @validate_model_data(ProjectResultCreate)
     @log_operation("创建项目成果")
     def create_project_result(self, result_data: ProjectResultCreate) -> int:
@@ -29,7 +29,7 @@ class ProjectResultLogic:
             int: 新创建的项目成果ID，失败返回-1
         """
         return self.project_result_dao.insert(result_data)
-    
+
     @validate_model_data(ProjectResultUpdate)
     @log_operation("更新项目成果")
     def update_project_result(self, result_id: int, result_data: ProjectResultUpdate) -> bool:
@@ -46,10 +46,10 @@ class ProjectResultLogic:
         existing_result = self.get_project_result_by_id(result_id)
         if not existing_result:
             raise ValueError(f"项目成果ID {result_id} 不存在")
-        
+
         # 更新项目成果
         return self.project_result_dao.update(result_id, result_data)
-    
+
     @log_operation("删除项目成果")
     def delete_project_result(self, result_id: int) -> bool:
         """删除项目成果
@@ -61,7 +61,7 @@ class ProjectResultLogic:
             bool: 删除是否成功
         """
         return self.project_result_dao.delete(result_id)
-    
+
     def get_project_result_by_id(self, result_id: int) -> Optional[ProjectResult]:
         """根据ID获取项目成果
         
@@ -72,7 +72,7 @@ class ProjectResultLogic:
             Optional[ProjectResult]: 项目成果对象，不存在返回None
         """
         return self.project_result_dao.get_by_id(result_id)
-    
+
     def get_project_results_by_project_id(self, project_id: int) -> List[ProjectResult]:
         """根据项目ID获取所有项目成果
         
@@ -83,7 +83,7 @@ class ProjectResultLogic:
             List[ProjectResult]: 项目成果列表
         """
         return self.project_result_dao.get_by_project_id(project_id)
-    
+
     @log_operation("批量创建项目成果")
     def batch_create_project_results(self, project_id: int, results_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """批量创建项目成果
@@ -97,13 +97,13 @@ class ProjectResultLogic:
         """
         # 先删除该项目的所有成果
         self.project_result_dao.delete_by_project_id(project_id)
-        
+
         # 创建新的成果
         saved_results = []
         for result_data in results_data:
             # 确保包含project_id
             result_data['project_id'] = project_id
-            
+
             try:
                 # 创建成果
                 create_data = ProjectResultCreate(**result_data)
@@ -116,5 +116,5 @@ class ProjectResultLogic:
                     print(f"创建项目成果失败，ID返回0或负数: {result_data.get('name')}")
             except Exception as e:
                 print(f"创建项目成果失败: {e}")
-        
+
         return saved_results

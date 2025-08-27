@@ -6,18 +6,16 @@
 """
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Union, TypeVar, Generic, Type
+from typing import Any, Dict, TypeVar
 
-from pydantic import BaseModel, Field, validator
-from pydantic.generics import GenericModel
-
+from pydantic import BaseModel
 
 T = TypeVar('T')
 
 
-
 class DateTimeFormatterMixin:
     """日期时间格式化混合类"""
+
     @classmethod
     def format_value(cls, value: Any) -> Any:
         """格式化值"""
@@ -52,23 +50,23 @@ class DateTimeFormatterMixin:
 
 class BaseDataModel(BaseModel, DateTimeFormatterMixin):
     """基础数据模型"""
-    
+
     class Config:
         json_encoders = {
             datetime: lambda v: v.strftime('%Y-%m-%d %H:%M:%S'),
             date: lambda v: v.strftime('%Y-%m-%d'),
             Decimal: lambda v: str(float(v))
         }
-    
+
     @classmethod
     def from_orm(cls, obj: Any) -> 'BaseDataModel':
         """从ORM对象创建模型"""
         return super().from_orm(obj)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典"""
         return self.dict()
-    
+
     def to_formatted_dict(self) -> Dict[str, Any]:
         """转换为格式化字典"""
         return self.format_model()

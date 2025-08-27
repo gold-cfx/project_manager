@@ -4,7 +4,7 @@
 """
 科研项目管理系统 - 项目成果数据访问对象
 """
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 
 from data.db_connection import with_db_connection
 from models.project_result import ProjectResult, ProjectResultCreate, ProjectResultUpdate
@@ -24,7 +24,7 @@ class ProjectResultDAO:
             # 使用模型的字段名和占位符
             fields = ["project_id", "type", "name", "date"]
             placeholders = ", ".join(["%s"] * len(fields))
-            
+
             sql = f"""
                 INSERT INTO {self.table_name} (
                     {', '.join(fields)}
@@ -32,7 +32,7 @@ class ProjectResultDAO:
                     {placeholders}
                 )
             """
-            
+
             # 从模型获取参数值
             params = (
                 result_data.project_id,
@@ -104,10 +104,10 @@ class ProjectResultDAO:
                 SET {', '.join(update_fields)}
                 WHERE id = %s
             """
-            
+
             # 添加ID参数
             params.append(result_id)
-            
+
             # 执行更新
             cursor.execute(sql, tuple(params))
             return cursor.rowcount >= 0

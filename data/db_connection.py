@@ -155,6 +155,9 @@ def init_database():
                 project_result_id INT NOT NULL,
                 file_name VARCHAR(255) NOT NULL,
                 file_path VARCHAR(255) NOT NULL,
+                file_server_host VARCHAR(255) NOT NULL,
+                file_server_port VARCHAR(255) NOT NULL,
+                file_storage_directory VARCHAR(255) NOT NULL,
                 upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (project_result_id) REFERENCES project_result(id) ON DELETE CASCADE
             )

@@ -3,7 +3,7 @@
 """
 科研项目管理系统 - 项目业务逻辑
 """
-from typing import List, Optional, Dict, Any, Union, Tuple
+from typing import List, Optional, Dict, Any
 
 from data.project_dao import ProjectDAO
 from models.project import Project, ProjectCreate, ProjectUpdate, ProjectStatus
@@ -12,10 +12,10 @@ from utils.decorators import validate_model_data, log_operation
 
 class ProjectLogic:
     """项目业务逻辑类"""
-    
+
     def __init__(self):
         self.project_dao = ProjectDAO()
-    
+
     @validate_model_data(ProjectCreate)
     @log_operation("创建项目")
     def create_project(self, project_data: ProjectCreate) -> int:
@@ -30,10 +30,10 @@ class ProjectLogic:
         # 检查项目名称是否已存在
         if self.is_project_name_exists(project_data.project_name):
             raise ValueError(f"项目名称 '{project_data.project_name}' 已存在")
-        
+
         # 创建项目
         return self.project_dao.insert(project_data)
-    
+
     @validate_model_data(ProjectUpdate)
     @log_operation("更新项目")
     def update_project(self, project_id: int, project_data: ProjectUpdate) -> bool:
@@ -50,15 +50,15 @@ class ProjectLogic:
         existing_project = self.get_project_by_id(project_id)
         if not existing_project:
             raise ValueError(f"项目ID {project_id} 不存在")
-        
+
         # 如果更新了项目名称，检查名称是否已存在
         if project_data.project_name and project_data.project_name != existing_project.project_name:
             if self.is_project_name_exists(project_data.project_name):
                 raise ValueError(f"项目名称 '{project_data.project_name}' 已存在")
-        
+
         # 更新项目
         return self.project_dao.update(project_id, project_data)
-    
+
     @log_operation("删除项目")
     def delete_project(self, project_id: int) -> bool:
         """删除项目
@@ -70,7 +70,7 @@ class ProjectLogic:
             bool: 删除是否成功
         """
         return self.project_dao.delete(project_id)
-    
+
     def get_project_by_id(self, project_id: int) -> Optional[Project]:
         """根据ID获取项目
         
@@ -81,7 +81,7 @@ class ProjectLogic:
             Optional[Project]: 项目对象，不存在返回None
         """
         return self.project_dao.get_by_id(project_id)
-    
+
     def get_project_by_name(self, project_name: str) -> Optional[Project]:
         """根据名称获取项目
         
@@ -92,7 +92,7 @@ class ProjectLogic:
             Optional[Project]: 项目对象，不存在返回None
         """
         return self.project_dao.get_by_name(project_name)
-    
+
     def is_project_name_exists(self, project_name: str) -> bool:
         """检查项目名称是否已存在
         
@@ -103,7 +103,7 @@ class ProjectLogic:
             bool: 是否存在
         """
         return self.get_project_by_name(project_name) is not None
-    
+
     def get_all_projects(self) -> List[Project]:
         """获取所有项目
         
@@ -111,7 +111,7 @@ class ProjectLogic:
             List[Project]: 项目列表
         """
         return self.project_dao.get_all()
-    
+
     def search_projects(self, criteria: Dict[str, Any]) -> List[Project]:
         """搜索项目
         
@@ -122,7 +122,7 @@ class ProjectLogic:
             List[Project]: 符合条件的项目列表
         """
         return self.project_dao.search(criteria)
-    
+
     def get_project_statistics(self) -> Dict[str, Any]:
         """获取项目统计信息
         
@@ -131,16 +131,16 @@ class ProjectLogic:
         """
         all_projects = self.get_all_projects()
         status_count = self.project_dao.count_by_status()
-        
+
         # 计算总资金
         total_funding = sum(float(p.funding_amount) for p in all_projects)
-        
+
         return {
             "total_count": len(all_projects),
             "status_count": status_count,
             "total_funding": total_funding
         }
-    
+
     def change_project_status(self, project_id: int, status: ProjectStatus) -> bool:
         """更改项目状态
         

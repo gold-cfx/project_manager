@@ -8,10 +8,7 @@ import matplotlib
 matplotlib.use('Qt5Agg')  # 使用Qt5作为后端
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-import numpy as np
 import os
-from datetime import datetime
 
 
 class ChartUtils:

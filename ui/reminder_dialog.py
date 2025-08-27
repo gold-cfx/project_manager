@@ -7,14 +7,15 @@ from datetime import datetime
 
 from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import (
-    QDialog, QFormLayout, QVBoxLayout, QLabel, QComboBox,
+    QDialog, QFormLayout, QVBoxLayout, QComboBox,
     QSpinBox, QTextEdit, QDialogButtonBox, QMessageBox, QDateEdit
 )
+from PyQt5.QtWidgets import QLabel
 
 from logic.project_logic import ProjectLogic
 from logic.reminder_logic import ReminderLogic
 from models.reminder import ReminderType, ReminderWay
-from PyQt5.QtWidgets import QLabel
+
 
 class BaseReminderDialog(QDialog):
     """提醒对话框基类，抽离公共逻辑"""
@@ -43,7 +44,6 @@ class BaseReminderDialog(QDialog):
         # 提醒类型
         self.reminder_type_combo = QComboBox()
         form_layout.addRow('提醒类型 *', self.reminder_type_combo)
-
 
         # 提醒基准时间（默认隐藏）
         self.reminder_base_date_edit = QDateEdit()
@@ -113,7 +113,7 @@ class BaseReminderDialog(QDialog):
 
     def on_reminder_type_changed(self, text):
         """处理提醒类型变化，显示或隐藏提醒基准时间"""
-        
+
         if text == ReminderType.CUSTOM.value:
             base_date = datetime.strptime("2000-01-01", '%Y-%m-%d').date()
             if self.reminder_base_date_edit.date() == QDate(base_date.year, base_date.month, base_date.day):
@@ -124,7 +124,7 @@ class BaseReminderDialog(QDialog):
         else:
             self.reminder_base_date_edit.hide()
             self.base_date_label.hide()  # 直接隐藏标签
-        
+
         # 调整对话框大小以适应控件显示状态
         self.adjustSize()
 

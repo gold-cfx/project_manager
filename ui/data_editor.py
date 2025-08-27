@@ -3,6 +3,8 @@
 """
 科研项目管理系统 - 数据编辑公共模块
 """
+import os
+
 from PyQt5.QtCore import Qt, QDate
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (
@@ -10,10 +12,10 @@ from PyQt5.QtWidgets import (
     QLineEdit, QDateEdit, QComboBox, QDoubleSpinBox, QPushButton, QMessageBox, QGroupBox, QTableWidget,
     QTableWidgetItem, QDialog, QDialogButtonBox, QListWidget, QFileDialog, QListWidgetItem
 )
-import os
+
 from logic.project_logic import ProjectLogic
-from logic.project_result_logic import ProjectResultLogic
 from logic.project_result_attachment_logic import ProjectResultAttachmentLogic
+from logic.project_result_logic import ProjectResultLogic
 from utils.validator import Validator
 
 
@@ -148,19 +150,59 @@ class ResultDialog(QDialog):
             QMessageBox.information(self, '提示', '新添加的附件尚未保存，无法下载')
             return
 
+        # 使用文件服务器客户端检查和下载文件
         file_path = attachment_data.get('file_path')
-        if not file_path or not os.path.exists(file_path):
-            QMessageBox.warning(self, '错误', '附件文件不存在')
+        if not file_path:
+            QMessageBox.warning(self, '错误', '附件文件路径不存在')
             return
 
-        save_path, _ = QFileDialog.getSaveFileName(self, '保存附件', attachment_data['file_name'])
-        if save_path:
-            try:
-                import shutil
-                shutil.copy2(file_path, save_path)
-                QMessageBox.information(self, '成功', '附件下载成功')
-            except Exception as e:
-                QMessageBox.warning(self, '错误', f'下载失败: {e}')
+        # 创建临时文件服务器客户端
+        from file_server.client import FileServerClient
+        try:
+            # 使用附件记录中存储的文件服务器信息
+            temp_client = FileServerClient(
+                host=attachment_data.get('file_server_host'),
+                port=attachment_data.get('file_server_port'),
+                root_dir=attachment_data.get('file_storage_directory')
+            )
+
+            # 检查文件是否存在
+            if not temp_client.check_file_exists(file_path):
+                QMessageBox.information(self, '提示',
+                                        '附件文件在数据库配置的文件服务器上不存在，将尝试使用当前系统配置的文件服务')
+
+                # 使用当前系统配置的文件服务再试一次
+                from file_server.client import file_server_client
+                try:
+                    # 检查文件在系统配置的文件服务器上是否存在
+                    if file_server_client.check_file_exists(file_path):
+                        # 下载文件
+                        save_path, _ = QFileDialog.getSaveFileName(self, '保存附件', attachment_data['file_name'])
+                        if save_path:
+                            success, error = file_server_client.download_file(file_path, save_path)
+                            if success:
+                                QMessageBox.information(self, '成功', '附件下载成功')
+                                return
+                            else:
+                                QMessageBox.warning(self, '错误', f'下载失败: {error}')
+                                return
+                except Exception as retry_error:
+                    QMessageBox.warning(self, '错误', f'使用系统配置的文件服务重试失败: {str(retry_error)}')
+
+                # 如果重试也失败，则显示原始错误
+                QMessageBox.warning(self, '错误', '附件文件不存在')
+                return
+
+            # 下载文件
+            save_path, _ = QFileDialog.getSaveFileName(self, '保存附件', attachment_data['file_name'])
+            if save_path:
+                success, error = temp_client.download_file(file_path, save_path)
+                if success:
+                    QMessageBox.information(self, '成功', '附件下载成功')
+                else:
+                    QMessageBox.warning(self, '错误', f'下载失败: {error}')
+        except Exception as e:
+            QMessageBox.warning(self, '错误', f'下载失败: {e}')
 
     def get_result_data(self):
         """获取成果数据"""
@@ -216,13 +258,13 @@ class BaseProjectEditor(object):
         basic_info_group = QGroupBox('项目基本信息')
         # 创建水平布局（用于并排放置两个 QFormLayout）
         self.h_layout = QHBoxLayout()
-        
+
         # 创建第一个FormLayout
         basic_info_layout1 = QFormLayout()
 
         # 创建第二个FormLayout
         basic_info_layout2 = QFormLayout()
-        
+
         # 项目名称
         self.project_name_edit = QLineEdit()
         self.project_name_edit.setPlaceholderText('请输入项目名称')
@@ -246,20 +288,20 @@ class BaseProjectEditor(object):
 
         # 项目来源
         self.source_combo = QComboBox()
-        self.source_combo.addItems(['请选择项目来源', '国家自然科学基金', '科技部项目', '教育部项目', '省级科技计划', '市级科技计划', '其他'])        
+        self.source_combo.addItems(
+            ['请选择项目来源', '国家自然科学基金', '科技部项目', '教育部项目', '省级科技计划', '市级科技计划', '其他'])
         basic_info_layout1.addRow('项目来源 *', self.source_combo)
 
         # 项目类型
         self.type_combo = QComboBox()
-        self.type_combo.addItems(['纵向课题', '横向课题', '研究者发起的临床研究项目', 'GCP项目'])        
+        self.type_combo.addItems(['纵向课题', '横向课题', '研究者发起的临床研究项目', 'GCP项目'])
         basic_info_layout2.addRow('项目类型 *', self.type_combo)
 
-        
         # 项目级别
         self.level_combo = QComboBox()
         # 使用 ProjectLevel 枚举中定义的值
         from models.project import ProjectLevel
-        self.level_combo.addItems([level.value for level in ProjectLevel])        
+        self.level_combo.addItems([level.value for level in ProjectLevel])
         basic_info_layout1.addRow('项目级别 *', self.level_combo)
 
         # 资助经费（万元）
@@ -301,8 +343,6 @@ class BaseProjectEditor(object):
         self.end_date_edit.dateChanged.connect(self.on_date_changed)
         basic_info_layout2.addRow('项目结束时间 *', self.end_date_edit)
 
-
-
         # 项目持续时间
         self.duration_label = QLabel('1 年')
         basic_info_layout1.addRow('项目持续时间', self.duration_label)
@@ -312,7 +352,6 @@ class BaseProjectEditor(object):
         self.h_layout.addLayout(basic_info_layout2)
         basic_info_group.setLayout(self.h_layout)
         main_layout.addWidget(basic_info_group)
-
 
         # 创建项目result信息组
         result_info_group = QGroupBox('项目成果信息')
@@ -389,17 +428,17 @@ class BaseProjectEditor(object):
         self.leader_edit.setText(project.leader)
         self.department_edit.setText(project.department if hasattr(project, 'department') else '')
         self.phone_edit.setText(project.phone)
-        
+
         # 设置项目来源
         source_index = self.source_combo.findText(project.project_source if hasattr(project, 'project_source') else '')
         if source_index >= 0:
             self.source_combo.setCurrentIndex(source_index)
-        
+
         # 设置项目类型
         type_index = self.type_combo.findText(project.project_type if hasattr(project, 'project_type') else '')
         if type_index >= 0:
             self.type_combo.setCurrentIndex(type_index)
-        
+
         # 设置立项年度和项目编号
         self.approval_year_edit.setText(project.approval_year if hasattr(project, 'approval_year') else '')
         self.project_code_edit.setText(project.project_number if hasattr(project, 'project_number') else '')
@@ -441,31 +480,31 @@ class BaseProjectEditor(object):
 
         # 更新持续时间
         self.on_date_changed()
-        
+
     def load_project_results(self):
         """加载项目成果数据"""
         if not self.project_id:
             return
-            
+
         # 清空成果表格
         self.result_table.setRowCount(0)
-        
+
         # 获取项目成果
         project_results = self.project_result_logic.get_project_results_by_project_id(self.project_id)
-        
+
         # 填充成果表格
         for result in project_results:
             # 确保日期格式正确
             date_str = result.date
             if hasattr(result.date, 'strftime'):
                 date_str = result.date.strftime('%Y-%m-%d')
-                
+
             result_data = {
                 'type': result.type,
                 'name': result.name,
                 'date': date_str,
-                'id': result.id, # 存储成果ID
-                'attachments': self.attachment_logic.get_attachments_by_result(result.id) # 加载附件
+                'id': result.id,  # 存储成果ID
+                'attachments': self.attachment_logic.get_attachments_by_result(result.id)  # 加载附件
             }
             if not hasattr(self, 'results_data'):
                 self.results_data = []
@@ -541,7 +580,7 @@ class BaseProjectEditor(object):
 
         row = selected_rows[0].row()
         result_id = self.result_table.item(row, 0).data(Qt.UserRole)
-        
+
         # 从 self.results_data 中找到对应的 result_data
         result_data = next((r for r in getattr(self, 'results_data', []) if r.get('id') == result_id), None)
 
@@ -555,12 +594,14 @@ class BaseProjectEditor(object):
                         # 合并 attachments_to_add
                         existing_attachments_to_add = set(self.results_data[i].get('attachments_to_add', []))
                         new_attachments_to_add = set(updated_result_data.get('attachments_to_add', []))
-                        self.results_data[i]['attachments_to_add'] = list(existing_attachments_to_add.union(new_attachments_to_add))
+                        self.results_data[i]['attachments_to_add'] = list(
+                            existing_attachments_to_add.union(new_attachments_to_add))
 
                         # 合并 attachments_to_delete
                         existing_attachments_to_delete = set(self.results_data[i].get('attachments_to_delete', []))
                         new_attachments_to_delete = set(updated_result_data.get('attachments_to_delete', []))
-                        self.results_data[i]['attachments_to_delete'] = list(existing_attachments_to_delete.union(new_attachments_to_delete))
+                        self.results_data[i]['attachments_to_delete'] = list(
+                            existing_attachments_to_delete.union(new_attachments_to_delete))
 
                         # 更新其他字段
                         self.results_data[i]['type'] = updated_result_data['type']
@@ -639,25 +680,25 @@ class BaseProjectEditor(object):
         if not Validator.is_valid_project_name(project_name):
             QMessageBox.warning(self.widget, '输入错误', '项目名称不能为空且不能超过255个字符')
             return False
-        
+
         # 验证科室
         department = self.department_edit.text()
         if not Validator.is_valid_department(department):
             QMessageBox.warning(self.widget, '输入错误', '科室不能为空且不能超过50个字符')
             return False
-        
+
         # 验证项目来源
         project_source = self.source_combo.currentText()
         if project_source == '请选择项目来源':
             QMessageBox.warning(self.widget, '输入错误', '请选择项目来源')
             return False
-        
+
         # 验证立项年度
         approval_year = self.approval_year_edit.text()
         if not Validator.is_valid_approval_year(approval_year):
             QMessageBox.warning(self.widget, '输入错误', '请输入有效的立项年度(格式:YYYY)')
             return False
-        
+
         # 验证项目编号
         project_number = self.project_code_edit.text()
         if not Validator.is_valid_project_number(project_number):
@@ -780,7 +821,7 @@ class BaseProjectEditor(object):
                         )
                         new_result_id = self.project_result_logic.create_project_result(create_data)
                         if new_result_id > 0:
-                            result_data['id'] = new_result_id # 更新ID以便后续附件处理
+                            result_data['id'] = new_result_id  # 更新ID以便后续附件处理
                             processed_results.append({'id': new_result_id, **result_data})
                         else:
                             QMessageBox.warning(self.widget, '保存失败', f'创建成果 {result_data["name"]} 失败')
@@ -799,7 +840,8 @@ class BaseProjectEditor(object):
                     for i, r in enumerate(self.results_data):
                         if r.get('id') == result_data['id']:
                             # 重新加载附件列表，确保是最新的
-                            self.results_data[i]['attachments'] = self.attachment_logic.get_attachments_by_result(result_data['id'])
+                            self.results_data[i]['attachments'] = self.attachment_logic.get_attachments_by_result(
+                                result_data['id'])
                             self.results_data[i]['attachments_to_add'] = []
                             self.results_data[i]['attachments_to_delete'] = []
                             break
@@ -811,9 +853,7 @@ class BaseProjectEditor(object):
                         self.attachment_logic.delete_result_attachments(result_id_to_delete)
                         # 删除成果本身
                         self.project_result_logic.delete_project_result(result_id_to_delete)
-                    self.results_to_delete_ids = [] # 清空列表
-
-
+                    self.results_to_delete_ids = []  # 清空列表
 
                 QMessageBox.information(self.widget, '保存成功', '项目信息已成功保存')
                 if hasattr(self, 'on_save_success') and callable(self.on_save_success):

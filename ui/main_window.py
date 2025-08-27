@@ -3,19 +3,17 @@
 """
 科研项目管理系统 - 主窗口
 """
-import sys
-import os
-from PyQt5.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QListWidget, QListWidgetItem, QFrame, QStatusBar, QToolBar
-)
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QIcon, QFont
-from .project_registration import ProjectRegistration
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import (
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QFrame, QStatusBar, QToolBar
+)
+
+from .help_document import HelpDocument
 from .project_query import ProjectQuery
+from .project_registration import ProjectRegistration
 from .reminder_management import ReminderManagement
 from .system_settings import SystemSettings
-from .help_document import HelpDocument
 
 
 class MainWindow(QMainWindow):

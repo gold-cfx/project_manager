@@ -10,7 +10,10 @@ from datetime import datetime
 
 config_dir = os.path.dirname(__file__)
 root_dir = os.path.dirname(config_dir)
-with open(os.path.join(config_dir, 'config.json'), 'r') as f:
+config_path = os.path.join(config_dir, 'config.json')
+
+default_db_name = 'research_project'
+with open(config_path, 'r') as f:
     config = json.load(f)
 # 数据库配置
 DB_CONFIG = {
@@ -20,8 +23,7 @@ DB_CONFIG = {
     'db': 'research_project',  # 数据库名
     'charset': 'utf8mb4'  # 字符集
 }
-DB_CONFIG.update(config['database'])
-UPLOAD_DIR = config['upload_dir'] or os.path.join(root_dir, 'attachments')
+DB_CONFIG.update({k: v for k, v in config['database'].items() if not (v is None or v == "")})
 
 # 系统配置
 SYSTEM_CONFIG = {
@@ -32,3 +34,14 @@ SYSTEM_CONFIG = {
     'default_reminder_days': 30,  # 默认提前提醒天数
     'max_project_duration': 10,  # 最大项目持续时间（年）
 }
+DEFAULT_ROOT_DIR = "C:\\Farmar\\code\\office-v3\\attachments"
+FILE_SERVER_CONFIG = {
+    "enabled": True,
+    "host": "127.0.0.1",
+    "port": 5001,
+    "root_dir": DEFAULT_ROOT_DIR,
+    "remote_server": True,
+    "remote_host": "",
+    "remote_port": 5001
+}
+FILE_SERVER_CONFIG.update({k: v for k, v in config['file_server'].items() if not (v is None or v == "")})

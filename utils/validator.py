@@ -213,12 +213,12 @@ def validate_project_data(project_data):
 
     # 验证结束日期
     valid, msg = Validator.is_valid_date(project_data.get('end_date'))
-    if not valid: errors.append(msg)
+    if not valid:
+        errors.append(msg)
     else:
         # 验证日期范围
         valid, msg = Validator.is_valid_date_range(project_data.get('start_date'), project_data.get('end_date'))
         if not valid: errors.append(msg)
-    
 
     # 验证立项年度
     valid, msg = Validator.is_valid_approval_year(project_data.get('approval_year'))

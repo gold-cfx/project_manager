@@ -1,8 +1,15 @@
 import json
 import os
 
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QLineEdit, QPushButton, QFileDialog, QMainWindow
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import (
+    QWidget, QVBoxLayout, QFormLayout, QLineEdit, QPushButton,
+    QFileDialog, QGroupBox, QHBoxLayout,
+    QRadioButton, QLabel
+)
+
 from config import settings
+
 
 class SystemSettings(QWidget):
     def __init__(self):
@@ -13,70 +20,167 @@ class SystemSettings(QWidget):
         # 创建主布局
         main_layout = QVBoxLayout(self)
 
-        # 创建表单布局
-        form_layout = QFormLayout()
-
         # 数据库配置
+        db_group = QGroupBox('数据库配置')
+        db_layout = QFormLayout()
+
         self.db_config_host = QLineEdit()
         self.db_config_host.setPlaceholderText('请输入数据库连接主机ip地址')
-        form_layout.addRow('数据库主机', self.db_config_host)
+        db_layout.addRow('数据库主机', self.db_config_host)
         self.db_config_db_name = QLineEdit()
         self.db_config_db_name.setPlaceholderText('请输入数据库连接库名')
-        form_layout.addRow('数据库连接库名', self.db_config_db_name)
+        db_layout.addRow('数据库连接库名', self.db_config_db_name)
         self.db_config_user = QLineEdit()
         self.db_config_user.setPlaceholderText('请输入数据库连接用户名')
-        form_layout.addRow('数据库连接用户名', self.db_config_user)
+        db_layout.addRow('数据库连接用户名', self.db_config_user)
         self.db_config_password = QLineEdit()
         self.db_config_password.setPlaceholderText('请输入数据库连接密码')
-        form_layout.addRow('数据库连接密码', self.db_config_password)
+        self.db_config_password.setEchoMode(QLineEdit.Password)
+        db_layout.addRow('数据库连接密码', self.db_config_password)
 
-        # 上传目录配置
-        self.upload_dir_edit = QLineEdit()
-        self.upload_dir_edit.setPlaceholderText('请选择附件存储目录')
-        self.upload_dir_edit.setReadOnly(True)
-        self.select_dir_button = QPushButton('选择目录')
-        self.select_dir_button.clicked.connect(self.select_directory)
-        form_layout.addRow('附件存储目录', self.upload_dir_edit)
-        form_layout.addRow('', self.select_dir_button)
+        db_group.setLayout(db_layout)
+        main_layout.addWidget(db_group)
+
+        # 文件服务器配置
+        file_server_group = QGroupBox('文件服务器配置')
+        file_server_layout = QFormLayout()
+
+        # 服务器模式选择
+        mode_layout = QHBoxLayout()
+        self.local_server_radio = QRadioButton('本地服务器')
+        self.remote_server_radio = QRadioButton('远程服务器')
+        mode_layout.addWidget(self.local_server_radio)
+        mode_layout.addWidget(self.remote_server_radio)
+        file_server_layout.addRow('服务器模式', mode_layout)
+
+        # 本地服务器配置
+        self.local_host_edit = QLineEdit()
+        self.local_host_edit.setPlaceholderText('默认: 127.0.0.1')
+        self.local_port_edit = QLineEdit()
+        self.local_port_edit.setPlaceholderText('默认: 5001')
+        file_server_layout.addRow('本地主机地址', self.local_host_edit)
+        file_server_layout.addRow('本地端口', self.local_port_edit)
+
+        # 远程服务器配置
+        self.remote_host_edit = QLineEdit()
+        self.remote_host_edit.setPlaceholderText('远程服务器IP地址')
+        self.remote_port_edit = QLineEdit()
+        self.remote_port_edit.setPlaceholderText('默认: 5001')
+        file_server_layout.addRow('远程主机地址', self.remote_host_edit)
+        file_server_layout.addRow('远程端口', self.remote_port_edit)
+
+        # 文件存储目录
+        self.file_server_dir_edit = QLineEdit()
+        self.file_server_dir_edit.setPlaceholderText('请选择文件存储目录')
+        self.file_server_dir_edit.setReadOnly(True)
+        self.select_file_server_dir_button = QPushButton('选择目录')
+        self.select_file_server_dir_button.clicked.connect(self.select_file_server_directory)
+        file_server_layout.addRow('文件存储目录', self.file_server_dir_edit)
+        file_server_layout.addRow('', self.select_file_server_dir_button)
+
+        # 添加提示信息
+        hint_label = QLabel('注意：修改文件服务器配置后需要重启应用程序才能生效')
+        hint_label.setStyleSheet('color: #888; font-size: 10px;')
+        file_server_layout.addRow('', hint_label)
+
+        file_server_group.setLayout(file_server_layout)
+        main_layout.addWidget(file_server_group)
 
         # 保存按钮
         self.save_button = QPushButton('保存配置')
         self.save_button.clicked.connect(self.save_config)
-        form_layout.addRow('', self.save_button)
+        main_layout.addWidget(self.save_button, alignment=QtCore.Qt.AlignCenter)
 
-        main_layout.addLayout(form_layout)
+        # 信号连接
+        self.local_server_radio.toggled.connect(self.toggle_server_mode)
+        self.remote_server_radio.toggled.connect(self.toggle_server_mode)
 
         # 加载现有配置
         self.load_config()
 
+        # 初始化服务器模式
+        self.toggle_server_mode()
+
     def select_directory(self):
-        directory = QFileDialog.getExistingDirectory(self, '选择附件存储目录')
+        # 这个方法现在可能不再需要，但为了兼容性保留
+        directory = QFileDialog.getExistingDirectory(self, '选择目录', os.getcwd())
         if directory:
-            self.upload_dir_edit.setText(directory)
+            self.file_server_dir_edit.setText(directory)
+
+    def select_file_server_directory(self):
+        directory = QFileDialog.getExistingDirectory(self, '选择文件存储目录', os.getcwd())
+        if directory:
+            self.file_server_dir_edit.setText(directory)
+
+    def toggle_server_mode(self):
+        # 根据选择的服务器模式启用/禁用相应的配置项
+        is_remote = self.remote_server_radio.isChecked()
+
+        # 本地服务器配置
+        self.local_host_edit.setEnabled(not is_remote)
+        self.local_port_edit.setEnabled(not is_remote)
+        self.file_server_dir_edit.setEnabled(not is_remote)
+        self.select_file_server_dir_button.setEnabled(not is_remote)
+
+        # 远程服务器配置
+        self.remote_host_edit.setEnabled(is_remote)
+        self.remote_port_edit.setEnabled(is_remote)
 
     def load_config(self):
-        self.upload_dir_edit.setText(settings.UPLOAD_DIR)
+        # 从配置文件加载数据库配置
         db_config = settings.DB_CONFIG
-        self.db_config_host.setText(db_config.get("host"))
-        self.db_config_user.setText(db_config.get("user"))
-        self.db_config_db_name.setText(db_config.get("db"))
-        self.db_config_password.setText(db_config.get("password"))
+        self.db_config_host.setText(db_config.get('host', '127.0.0.1'))
+        self.db_config_db_name.setText(db_config.get('db_name', settings.default_db_name))
+        self.db_config_user.setText(db_config.get('user', 'root'))
+        self.db_config_password.setText(db_config.get('password', ''))
+
+        # 服务器模式
+        remote_server = settings.FILE_SERVER_CONFIG.get('remote_server', False)
+        if remote_server:
+            self.remote_server_radio.setChecked(True)
+        else:
+            self.local_server_radio.setChecked(True)
+
+        # 本地服务器配置
+        self.local_host_edit.setText(settings.FILE_SERVER_CONFIG.get('host', '127.0.0.1'))
+        self.local_port_edit.setText(str(settings.FILE_SERVER_CONFIG.get('port', 5001)))
+
+        # 远程服务器配置
+        self.remote_host_edit.setText(settings.FILE_SERVER_CONFIG.get('remote_host', ''))
+        self.remote_port_edit.setText(str(settings.FILE_SERVER_CONFIG.get('remote_port', 5001)))
+
+        # 文件存储目录
+        root_dir = settings.FILE_SERVER_CONFIG.get('root_dir', '')
+        self.file_server_dir_edit.setText(root_dir)
 
     def save_config(self):
+        settings_config = {}
+        # 保存数据库配置
         db_config = {
             'host': self.db_config_host.text(),
+            'db_name': self.db_config_db_name.text(),
             'user': self.db_config_user.text(),
-            'password': self.db_config_password.text(),
-            'db': self.db_config_db_name.text(),
-            'charset': 'utf8mb4'  # 字符集
+            'password': self.db_config_password.text()
         }
-        config = {
-            'database': db_config,
-            'upload_dir': self.upload_dir_edit.text()
+        settings_config['database'] = db_config
+
+        # 保存文件服务器配置
+        file_server_config = {
+            'enabled': True,  # 始终启用
+            'remote_server': self.remote_server_radio.isChecked(),
+            'host': self.local_host_edit.text(),
+            'port': int(self.local_port_edit.text()) if self.local_port_edit.text().isdigit() else 5001,
+            'remote_host': self.remote_host_edit.text(),
+            'remote_port': int(self.remote_port_edit.text()) if self.remote_port_edit.text().isdigit() else 5001,
+            'root_dir': self.file_server_dir_edit.text()
         }
-        config_path = os.path.join(os.path.dirname(__file__), '../config/config.json')
-        with open(config_path, 'w', encoding='utf-8') as f:
-            json.dump(config, f, ensure_ascii=False, indent=4)
-        main_window = self.window()
-        if isinstance(main_window, QMainWindow):
-            main_window.statusBar().showMessage('配置已保存, 重启后生效！')
+        settings_config["file_server"] = file_server_config
+        settings_config["upload_dir"] = self.file_server_dir_edit.text()
+
+        # 保存到配置文件
+        with open(settings.config_path, 'w', encoding='utf-8') as fw:
+            json.dump(settings_config, fw, ensure_ascii=False, indent=2)
+
+        # 提示用户配置已保存并需要重启
+        from PyQt5.QtWidgets import QMessageBox
+        QMessageBox.information(self, '配置保存成功', '文件服务器配置已保存，请重启应用程序使配置生效！')

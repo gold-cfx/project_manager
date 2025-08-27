@@ -3,9 +3,9 @@
 """
 科研项目管理系统 - 查询业务逻辑
 """
+from pymysql.cursors import Cursor
+
 from data.db_connection import with_db_connection
-from datetime import datetime
-from pymysql.cursors import DictCursor, Cursor
 
 
 class QueryLogic:

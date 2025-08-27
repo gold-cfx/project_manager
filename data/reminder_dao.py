@@ -3,12 +3,12 @@
 """
 科研项目管理系统 - 提醒数据访问对象
 """
-from typing import List, Optional, Dict, Any, Union
-from datetime import date
+from typing import List, Optional
+
+from pymysql.cursors import Cursor
 
 from data.db_connection import with_db_connection
 from models.reminder import Reminder, ReminderCreate, ReminderUpdate, ReminderStatus
-from pymysql.cursors import DictCursor, Cursor
 
 
 class ReminderDAO:
@@ -25,7 +25,7 @@ class ReminderDAO:
             # 使用模型的字段名和占位符
             fields = ReminderCreate.get_field_names()
             placeholders = ReminderCreate.get_sql_placeholders()
-            
+
             sql = f"""
                 INSERT INTO {self.table_name} (
                     {', '.join(fields)}
@@ -33,7 +33,7 @@ class ReminderDAO:
                     {placeholders}
                 )
             """
-            
+
             # 从模型获取参数值
             params = tuple(getattr(reminder_data, field) for field in fields)
             cursor.execute(sql, params)
@@ -89,17 +89,17 @@ class ReminderDAO:
             update_data = reminder_data.dict(exclude_unset=True, exclude_none=True)
             if not update_data:
                 return False
-                
+
             set_clause = ", ".join([f"{field} = %s" for field in update_data.keys()])
             values = list(update_data.values())
             values.append(reminder_id)  # 添加WHERE条件的参数
-            
+
             sql = f"""
                 UPDATE {self.table_name} SET
                     {set_clause}
                 WHERE id = %s
             """
-            
+
             cursor.execute(sql, tuple(values))
             return cursor.rowcount > 0
 

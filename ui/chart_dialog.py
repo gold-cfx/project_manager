@@ -4,13 +4,13 @@
 科研项目管理系统 - 图表弹窗
 """
 import matplotlib
+
 matplotlib.use('Qt5Agg')  # 使用Qt5作为后端
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-                            QComboBox, QTabWidget, QWidget, QPushButton)
-from PyQt5.QtCore import Qt
+                             QComboBox, QTabWidget, QWidget, QPushButton)
 
 # 设置中文字体
 plt.rcParams["font.family"] = ["SimHei", "WenQuanYi Micro Hei", "Heiti TC"]
