@@ -4,10 +4,13 @@
 """
 科研项目管理系统 - 数据库连接管理
 """
+import functools
+
 import pymysql
 from pymysql.cursors import DictCursor
 
 from config.settings import DB_CONFIG
+from utils.decorators import format_datetime_in_result
 
 
 class DatabaseConnection:
@@ -65,10 +68,52 @@ def get_connection():
     return _db_instance.get_connection()
 
 
-from utils.decorators import format_datetime_in_result
+def with_db_connection(cursor_type=DictCursor, commit=True):
+    """
+    数据库连接装饰器，自动管理数据库连接、游标、事务和异常处理
+    
+    Args:
+        cursor_type: 游标的类型，默认为DictCursor
+        commit: 是否需要commit
+
+    Returns:
+        装饰器函数
+    """
+
+    def decorator(func):
+        @functools.wraps(func)
+        @format_datetime_in_result
+        def wrapper(*args, **kwargs):
+            conn = get_connection()
+            cursor = conn.cursor(cursor_type)
+            try:
+                # 检查函数是否需要cursor参数
+                import inspect
+                sig = inspect.signature(func)
+                if 'cursor' in sig.parameters:
+                    kwargs['cursor'] = cursor
+                    result = func(*args, **kwargs)
+                else:
+                    result = func(*args, **kwargs)
+
+                if commit:
+                    conn.commit()
+                return result
+            except Exception as e:
+                print(f"数据库操作失败: {e}")
+                if conn: conn.rollback()
+                return None
+            finally:
+                if cursor: cursor.close()
+                if conn: conn.close()
+
+        return wrapper
+
+    return decorator
 
 
-def with_db_connection(operation, cursor_type=DictCursor, commit=True):
+# 兼容旧版本的函数调用方式
+def with_db_connection_old(operation, cursor_type=DictCursor, commit=True):
     """
     执行数据库操作的公共函数，封装连接创建、游标初始化、异常处理和资源释放
     
@@ -199,12 +244,39 @@ def init_database():
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 title VARCHAR(100) NOT NULL,
                 content TEXT NOT NULL,
-                version VARCHAR(20) NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                category VARCHAR(50) NOT NULL DEFAULT '通用',
+                create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
         """
         cursor.execute(create_help_info_table)
+
+        # 创建用户表
+        create_users_table = """
+            CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(50) NOT NULL UNIQUE,
+                password VARCHAR(64) NOT NULL,
+                real_name VARCHAR(50) NOT NULL,
+                role VARCHAR(20) NOT NULL DEFAULT 'user',
+                status VARCHAR(20) NOT NULL DEFAULT 'active',
+                email VARCHAR(100),
+                phone VARCHAR(20),
+                last_login TIMESTAMP NULL,
+                create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        """
+        cursor.execute(create_users_table)
+
+        # 创建默认管理员用户
+        import hashlib
+        admin_password = hashlib.sha256("12345678".encode()).hexdigest()
+        create_default_admin = """
+            INSERT IGNORE INTO users (username, password, real_name, role, status)
+            VALUES ('admin', %s, '系统管理员', 'admin', 'active')
+        """
+        cursor.execute(create_default_admin, (admin_password,))
 
         conn.commit()
         print("数据库初始化成功")

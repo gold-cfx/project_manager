@@ -5,7 +5,7 @@
 """
 from typing import List, Optional
 
-from pymysql.cursors import Cursor
+from pymysql.cursors import Cursor, DictCursor
 
 from data.db_connection import with_db_connection
 from models.reminder import Reminder, ReminderCreate, ReminderUpdate, ReminderStatus
@@ -18,131 +18,104 @@ class ReminderDAO:
         self.table_name = "reminders"
         self.model = Reminder
 
-    def insert(self, reminder_data: ReminderCreate) -> int:
+    @with_db_connection(cursor_type=Cursor)
+    def insert(self, reminder_data: ReminderCreate, cursor: Cursor) -> int:
         """插入新提醒"""
+        # 使用模型的字段名和占位符
+        fields = ReminderCreate.get_field_names()
+        placeholders = ReminderCreate.get_sql_placeholders()
 
-        def operation(cursor):
-            # 使用模型的字段名和占位符
-            fields = ReminderCreate.get_field_names()
-            placeholders = ReminderCreate.get_sql_placeholders()
+        sql = f"""
+            INSERT INTO {self.table_name} (
+                {', '.join(fields)}
+            ) VALUES (
+                {placeholders}
+            )
+        """
 
-            sql = f"""
-                INSERT INTO {self.table_name} (
-                    {', '.join(fields)}
-                ) VALUES (
-                    {placeholders}
-                )
-            """
+        # 从模型获取参数值
+        params = tuple(getattr(reminder_data, field) for field in fields)
+        cursor.execute(sql, params)
+        return cursor.lastrowid if cursor.lastrowid is not None else -1
 
-            # 从模型获取参数值
-            params = tuple(getattr(reminder_data, field) for field in fields)
-            cursor.execute(sql, params)
-            return cursor.lastrowid
-
-        result = with_db_connection(operation, cursor_type=Cursor)
-        return result if result is not None else -1
-
-    def get_by_id(self, reminder_id: int) -> Optional[Reminder]:
+    @with_db_connection()
+    def get_by_id(self, reminder_id: int, cursor: DictCursor) -> Optional[Reminder]:
         """根据ID获取提醒"""
-
-        def operation(cursor):
-            sql = f"SELECT * FROM {self.table_name} WHERE id = %s"
-            cursor.execute(sql, (reminder_id,))
-            return cursor.fetchone()
-
-        result = with_db_connection(operation)
+        sql = f"SELECT * FROM {self.table_name} WHERE id = %s"
+        cursor.execute(sql, (reminder_id,))
+        result = cursor.fetchone()
         if result is not None:
             return Reminder(**result)
         return None
 
-    def get_all(self) -> List[Reminder]:
+    @with_db_connection()
+    def get_all(self, cursor: DictCursor) -> List[Reminder]:
         """获取所有提醒"""
-
-        def operation(cursor):
-            sql = f"SELECT * FROM {self.table_name} ORDER BY start_date ASC"
-            cursor.execute(sql)
-            return cursor.fetchall()
-
-        results = with_db_connection(operation)
+        sql = f"SELECT * FROM {self.table_name} ORDER BY start_date ASC"
+        cursor.execute(sql)
+        results = cursor.fetchall()
         if results is not None:
             return [Reminder(**item) for item in results]
         return []
 
-    def get_unread(self) -> List[Reminder]:
+    @with_db_connection()
+    def get_unread(self, cursor: DictCursor) -> List[Reminder]:
         """获取未读提醒"""
-
-        def operation(cursor):
-            sql = f"SELECT * FROM {self.table_name} WHERE status = %s ORDER BY start_date ASC"
-            cursor.execute(sql, (ReminderStatus.UNREAD.value,))
-            return cursor.fetchall()
-
-        results = with_db_connection(operation)
+        sql = f"SELECT * FROM {self.table_name} WHERE status = %s ORDER BY start_date ASC"
+        cursor.execute(sql, (ReminderStatus.UNREAD.value,))
+        results = cursor.fetchall()
         if results is not None:
             return [Reminder(**item) for item in results]
         return []
 
-    def update(self, reminder_id: int, reminder_data: ReminderUpdate) -> bool:
+    @with_db_connection(cursor_type=Cursor)
+    def update(self, reminder_id: int, reminder_data: ReminderUpdate, cursor: Cursor) -> bool:
         """更新提醒"""
+        # 只更新非空字段
+        update_data = reminder_data.dict(exclude_unset=True, exclude_none=True)
+        if not update_data:
+            return False
 
-        def operation(cursor):
-            # 只更新非空字段
-            update_data = reminder_data.dict(exclude_unset=True, exclude_none=True)
-            if not update_data:
-                return False
+        set_clause = ", ".join([f"{field} = %s" for field in update_data.keys()])
+        values = list(update_data.values())
+        values.append(reminder_id)  # 添加WHERE条件的参数
 
-            set_clause = ", ".join([f"{field} = %s" for field in update_data.keys()])
-            values = list(update_data.values())
-            values.append(reminder_id)  # 添加WHERE条件的参数
+        sql = f"""
+            UPDATE {self.table_name} SET
+                {set_clause}
+            WHERE id = %s
+        """
 
-            sql = f"""
-                UPDATE {self.table_name} SET
-                    {set_clause}
-                WHERE id = %s
-            """
+        cursor.execute(sql, tuple(values))
+        return cursor.rowcount > 0
 
-            cursor.execute(sql, tuple(values))
-            return cursor.rowcount > 0
-
-        result = with_db_connection(operation, cursor_type=Cursor)
-        return result if result is not None else False
-
-    def delete(self, reminder_id: int) -> bool:
+    @with_db_connection(cursor_type=Cursor)
+    def delete(self, reminder_id: int, cursor: Cursor) -> bool:
         """删除提醒"""
+        sql = f"DELETE FROM {self.table_name} WHERE id = %s"
+        cursor.execute(sql, (reminder_id,))
+        return cursor.rowcount > 0
 
-        def operation(cursor):
-            sql = f"DELETE FROM {self.table_name} WHERE id = %s"
-            cursor.execute(sql, (reminder_id,))
-            return cursor.rowcount > 0
-
-        result = with_db_connection(operation, cursor_type=Cursor)
-        return result if result is not None else False
-
-    def get_by_project_id(self, project_id: int) -> List[Reminder]:
+    @with_db_connection()
+    def get_by_project_id(self, project_id: int, cursor: DictCursor) -> List[Reminder]:
         """根据项目ID获取提醒"""
-
-        def operation(cursor):
-            sql = f"SELECT * FROM {self.table_name} WHERE project_id = %s ORDER BY start_date ASC"
-            cursor.execute(sql, (project_id,))
-            return cursor.fetchall()
-
-        results = with_db_connection(operation)
+        sql = f"SELECT * FROM {self.table_name} WHERE project_id = %s ORDER BY start_date ASC"
+        cursor.execute(sql, (project_id,))
+        results = cursor.fetchall()
         if results is not None:
             return [Reminder(**item) for item in results]
         return []
 
-    def get_upcoming_reminders(self, days: int = 7) -> List[Reminder]:
+    @with_db_connection()
+    def get_upcoming_reminders(self, cursor: DictCursor, days: int = 7) -> List[Reminder]:
         """获取即将开始日期的提醒"""
-
-        def operation(cursor):
-            sql = f"""
-                SELECT * FROM {self.table_name} 
-                WHERE start_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL %s DAY)
-                ORDER BY start_date ASC
-            """
-            cursor.execute(sql, (days,))
-            return cursor.fetchall()
-
-        results = with_db_connection(operation)
+        sql = f"""
+            SELECT * FROM {self.table_name} 
+            WHERE start_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL %s DAY)
+            ORDER BY start_date ASC
+        """
+        cursor.execute(sql, (days,))
+        results = cursor.fetchall()
         if results is not None:
             return [Reminder(**item) for item in results]
         return []

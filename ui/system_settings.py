@@ -4,7 +4,7 @@ import os
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QFormLayout, QLineEdit, QPushButton,
-    QFileDialog, QGroupBox, QHBoxLayout,
+    QFileDialog, QGroupBox, QHBoxLayout, QTabWidget,
     QRadioButton, QLabel
 )
 
@@ -13,13 +13,34 @@ from config.settings import pod_ip
 
 
 class SystemSettings(QWidget):
-    def __init__(self):
+    def __init__(self, current_user=None):
         super().__init__()
+        self.current_user = current_user
         self.init_ui()
 
     def init_ui(self):
         # 创建主布局
         main_layout = QVBoxLayout(self)
+
+        # 创建标签页
+        self.tab_widget = QTabWidget()
+        
+        # 系统配置标签页
+        self.system_config_widget = QWidget()
+        self.init_system_config_tab()
+        self.tab_widget.addTab(self.system_config_widget, "系统配置")
+        
+        # 用户管理标签页（仅管理员可见）
+        if self.current_user and self.current_user.role == "admin":
+            from .user_management import UserManagementWidget
+            self.user_management_widget = UserManagementWidget(self.current_user)
+            self.tab_widget.addTab(self.user_management_widget, "用户管理")
+        
+        main_layout.addWidget(self.tab_widget)
+
+    def init_system_config_tab(self):
+        # 创建系统配置标签页的布局
+        config_layout = QVBoxLayout(self.system_config_widget)
 
         # 数据库配置
         db_group = QGroupBox('数据库配置')
@@ -40,7 +61,7 @@ class SystemSettings(QWidget):
         db_layout.addRow('数据库连接密码', self.db_config_password)
 
         db_group.setLayout(db_layout)
-        main_layout.addWidget(db_group)
+        config_layout.addWidget(db_group)
 
         # 文件服务器配置
         file_server_group = QGroupBox('文件服务器配置')
@@ -85,12 +106,12 @@ class SystemSettings(QWidget):
         file_server_layout.addRow('', hint_label)
 
         file_server_group.setLayout(file_server_layout)
-        main_layout.addWidget(file_server_group)
+        config_layout.addWidget(file_server_group)
 
         # 保存按钮
         self.save_button = QPushButton('保存配置')
         self.save_button.clicked.connect(self.save_config)
-        main_layout.addWidget(self.save_button, alignment=QtCore.Qt.AlignCenter)
+        config_layout.addWidget(self.save_button, alignment=QtCore.Qt.AlignCenter)
 
         # 信号连接
         self.local_server_radio.toggled.connect(self.toggle_server_mode)

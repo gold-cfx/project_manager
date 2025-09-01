@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import QApplication
 from data.db_connection import init_database
 from file_server.start_server import start_file_server
 from logic.auto_reminder import auto_reminder
+from ui.login_dialog import LoginDialog
 from ui.main_window import MainWindow
 
 matplotlib.use('Qt5Agg')
@@ -40,15 +41,23 @@ def main():
     with open('ui/styles.qss', 'r', encoding='utf-8') as f:
         app.setStyleSheet(f.read())
 
-    # 创建主窗口
-    main_window = MainWindow()
-    main_window.show()
+    # 显示登录对话框
+    login_dialog = LoginDialog()
+    if login_dialog.exec_() == LoginDialog.Accepted:
+        current_user = login_dialog.get_current_user()
+        
+        # 创建主窗口
+        main_window = MainWindow(current_user)
+        main_window.show()
 
-    # 检查并显示自动提醒
-    auto_reminder.check_and_show_reminders()
+        # 检查并显示自动提醒
+        auto_reminder.check_and_show_reminders()
 
-    # 运行应用程序
-    sys.exit(app.exec_())
+        # 运行应用程序
+        sys.exit(app.exec_())
+    else:
+        # 用户取消登录，退出程序
+        sys.exit(0)
 
 
 if __name__ == '__main__':

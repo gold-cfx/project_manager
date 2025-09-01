@@ -5,7 +5,7 @@
 """
 from typing import Optional
 
-from pymysql.cursors import Cursor
+from pymysql.cursors import Cursor, DictCursor
 
 from data.db_connection import with_db_connection
 from models.help_doc import HelpDoc, HelpDocCreate, HelpDocUpdate
@@ -18,91 +18,73 @@ class HelpDocDAO:
         self.table_name = "help_docs"
         self.model = HelpDoc
 
-    def insert(self, help_doc_data: HelpDocCreate) -> int:
+    @with_db_connection(cursor_type=Cursor)
+    def insert(self, help_doc_data: HelpDocCreate, cursor: Cursor) -> int:
         """插入新帮助文档"""
+        # 使用模型的字段名和占位符
+        fields = HelpDocCreate.get_field_names()
+        placeholders = HelpDocCreate.get_sql_placeholders()
 
-        def operation(cursor):
-            # 使用模型的字段名和占位符
-            fields = HelpDocCreate.get_field_names()
-            placeholders = HelpDocCreate.get_sql_placeholders()
+        sql = f"""
+            INSERT INTO {self.table_name} (
+                {', '.join(fields)}
+            ) VALUES (
+                {placeholders}
+            )
+        """
 
-            sql = f"""
-                INSERT INTO {self.table_name} (
-                    {', '.join(fields)}
-                ) VALUES (
-                    {placeholders}
-                )
-            """
+        # 从模型获取参数值
+        params = tuple(getattr(help_doc_data, field) for field in fields)
+        cursor.execute(sql, params)
+        return cursor.lastrowid if cursor.lastrowid is not None else -1
 
-            # 从模型获取参数值
-            params = tuple(getattr(help_doc_data, field) for field in fields)
-            cursor.execute(sql, params)
-            return cursor.lastrowid
-
-        result = with_db_connection(operation, cursor_type=Cursor)
-        return result if result is not None else -1
-
-    def get_by_id(self, doc_id: int) -> Optional[HelpDoc]:
+    @with_db_connection()
+    def get_by_id(self, doc_id: int, cursor: DictCursor) -> Optional[HelpDoc]:
         """根据ID获取帮助文档"""
-
-        def operation(cursor):
-            sql = f"SELECT * FROM {self.table_name} WHERE id = %s"
-            cursor.execute(sql, (doc_id,))
-            return cursor.fetchone()
-
-        result = with_db_connection(operation)
+        sql = f"SELECT * FROM {self.table_name} WHERE id = %s"
+        cursor.execute(sql, (doc_id,))
+        result = cursor.fetchone()
         if result is not None:
             return HelpDoc(**result)
         return None
 
-    def get_latest(self) -> Optional[HelpDoc]:
+    @with_db_connection()
+    def get_latest(self, cursor: DictCursor) -> Optional[HelpDoc]:
         """获取最新的帮助文档"""
-
-        def operation(cursor):
-            sql = f"SELECT * FROM {self.table_name} ORDER BY updated_at DESC LIMIT 1"
-            cursor.execute(sql)
-            return cursor.fetchone()
-
-        result = with_db_connection(operation)
+        sql = f"SELECT * FROM {self.table_name} ORDER BY updated_at DESC LIMIT 1"
+        cursor.execute(sql)
+        result = cursor.fetchone()
         if result is not None:
             return HelpDoc(**result)
         return None
 
-    def update(self, doc_id: int, help_doc_data: HelpDocUpdate) -> bool:
+    @with_db_connection(cursor_type=Cursor)
+    def update(self, doc_id: int, help_doc_data: HelpDocUpdate, cursor: Cursor) -> bool:
         """更新帮助文档"""
+        # 只更新非空字段
+        update_data = help_doc_data.dict(exclude_unset=True, exclude_none=True)
+        if not update_data:
+            return False
 
-        def operation(cursor):
-            # 只更新非空字段
-            update_data = help_doc_data.dict(exclude_unset=True, exclude_none=True)
-            if not update_data:
-                return False
+        set_clause = ", ".join([f"{field} = %s" for field in update_data.keys()])
+        values = list(update_data.values())
+        values.append(doc_id)  # 添加WHERE条件的参数
 
-            set_clause = ", ".join([f"{field} = %s" for field in update_data.keys()])
-            values = list(update_data.values())
-            values.append(doc_id)  # 添加WHERE条件的参数
+        sql = f"""
+            UPDATE {self.table_name} SET
+                {set_clause}
+            WHERE id = %s
+        """
 
-            sql = f"""
-                UPDATE {self.table_name} SET
-                    {set_clause}
-                WHERE id = %s
-            """
+        cursor.execute(sql, tuple(values))
+        return cursor.rowcount >= 0
 
-            cursor.execute(sql, tuple(values))
-            return cursor.rowcount >= 0
-
-        result = with_db_connection(operation, cursor_type=Cursor)
-        return result if result is not None else False
-
-    def delete(self, doc_id: int) -> bool:
+    @with_db_connection(cursor_type=Cursor)
+    def delete(self, doc_id: int, cursor: Cursor) -> bool:
         """删除帮助文档"""
-
-        def operation(cursor):
-            sql = f"DELETE FROM {self.table_name} WHERE id = %s"
-            cursor.execute(sql, (doc_id,))
-            return cursor.rowcount >= 0
-
-        result = with_db_connection(operation, cursor_type=Cursor)
-        return result if result is not None else False
+        sql = f"DELETE FROM {self.table_name} WHERE id = %s"
+        cursor.execute(sql, (doc_id,))
+        return cursor.rowcount >= 0
 
     def initialize_default_doc(self) -> int:
         """初始化默认帮助文档"""

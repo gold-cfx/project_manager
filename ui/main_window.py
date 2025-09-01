@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 """
 科研项目管理系统 - 主窗口
 """
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt, QSize, pyqtSignal
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QFrame, QStatusBar, QToolBar
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
+    QListWidgetItem, QFrame, QStatusBar, QToolBar, QMessageBox, QAction
 )
 
 from .help_document import HelpDocument
@@ -14,11 +16,16 @@ from .project_query import ProjectQuery
 from .project_registration import ProjectRegistration
 from .reminder_management import ReminderManagement
 from .system_settings import SystemSettings
+from .user_management import UserManagementWidget
+from models.user import User
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    login_success = pyqtSignal(User)
+    
+    def __init__(self, current_user):
         super().__init__()
+        self.current_user = current_user
         self.init_ui()
 
     def init_ui(self):
@@ -65,7 +72,7 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
 
         # 添加用户信息
-        user_label = QLabel('当前用户: 管理员')
+        user_label = QLabel(f'当前用户: {self.current_user.real_name} ({"管理员" if self.current_user.role == "admin" else "用户"})')
         toolbar.addWidget(user_label)
 
     def create_sidebar(self):
@@ -150,7 +157,7 @@ class MainWindow(QMainWindow):
     def show_system_settings(self):
         # 显示系统设置界面
         self.clear_content_area()
-        self.system_settings = SystemSettings()
+        self.system_settings = SystemSettings(self.current_user)
         self.content_layout.addWidget(self.system_settings)
         self.system_settings.show()
         self.status_bar.showMessage('系统设置')
@@ -162,6 +169,8 @@ class MainWindow(QMainWindow):
         self.content_layout.addWidget(self.help_document)
         self.help_document.show()
         self.status_bar.showMessage('帮助文档')
+
+
 
     def on_menu_clicked(self, item):
         # 处理菜单点击事件
