@@ -25,7 +25,6 @@ class DataDictBase(BaseModel):
     dict_type: str = Field(..., description="字典类型", max_length=50)
     dict_key: str = Field(..., description="字典键", max_length=50)
     dict_value: str = Field(..., description="字典值", max_length=100)
-    dict_label: str = Field(..., description="显示标签", max_length=100)
     sort_order: int = Field(0, description="排序顺序")
     is_active: bool = Field(True, description="是否启用")
     description: Optional[str] = Field(None, description="描述", max_length=200)
@@ -39,7 +38,6 @@ class DataDictCreate(DataDictBase):
 class DataDictUpdate(BaseModel):
     """更新数据字典模型"""
     dict_value: Optional[str] = None
-    dict_label: Optional[str] = None
     sort_order: Optional[int] = None
     is_active: Optional[bool] = None
     description: Optional[str] = None

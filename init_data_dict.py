@@ -4,7 +4,6 @@
 科研项目管理系统 - 数据字典初始化脚本
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -19,40 +18,40 @@ def initialize_data_dict():
     """初始化数据字典表和默认数据"""
     try:
         print("开始初始化数据字典...")
-        
+
         # 创建数据字典DAO实例
         dao = DataDictDAO()
-        
+
         # 初始化默认数据
         dao.initialize_default_data()
-        
+
         print("数据字典初始化完成！")
-        
+
         # 验证数据
         print("\n验证数据字典内容：")
-        
+
         # 项目状态
         statuses = dao.get_by_type("project_status")
-        print(f"项目状态: {[s.dict_label for s in statuses]}")
-        
+        print(f"项目状态: {[s.dict_value for s in statuses]}")
+
         # 项目级别
         levels = dao.get_by_type("project_level")
-        print(f"项目级别: {[l.dict_label for l in levels]}")
-        
+        print(f"项目级别: {[l.dict_value for l in levels]}")
+
         # 项目来源
         sources = dao.get_by_type("project_source")
-        print(f"项目来源: {[s.dict_label for s in sources]}")
-        
+        print(f"项目来源: {[s.dict_value for s in sources]}")
+
         # 项目类型
         types = dao.get_by_type("project_type")
-        print(f"项目类型: {[t.dict_label for t in types]}")
-        
+        print(f"项目类型: {[t.dict_value for t in types]}")
+
         # 成果类型
         result_types = dao.get_by_type("result_type")
-        print(f"成果类型: {[r.dict_label for r in result_types]}")
-        
+        print(f"成果类型: {[r.dict_value for r in result_types]}")
+
         return True
-        
+
     except Exception as e:
         print(f"初始化数据字典时出错: {str(e)}")
         return False

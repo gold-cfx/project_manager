@@ -23,14 +23,13 @@ class DataDictDAO:
         """插入新数据字典项"""
         sql = f"""
             INSERT INTO {self.table_name} 
-            (dict_type, dict_key, dict_value, dict_label, sort_order, is_active, description)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            (dict_type, dict_key, dict_value, sort_order, is_active, description)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """
         cursor.execute(sql, (
             dict_data.dict_type,
             dict_data.dict_key,
             dict_data.dict_value,
-            dict_data.dict_label,
             dict_data.sort_order,
             dict_data.is_active,
             dict_data.description
@@ -128,62 +127,44 @@ class DataDictDAO:
         """初始化默认数据字典数据"""
         default_data = [
             # 项目状态
-            {"dict_type": "project_status", "dict_key": "IN_PROGRESS", "dict_value": "进行中", "dict_label": "进行中",
-             "sort_order": 1},
-            {"dict_type": "project_status", "dict_key": "COMPLETED", "dict_value": "已完成", "dict_label": "已完成",
-             "sort_order": 2},
-            {"dict_type": "project_status", "dict_key": "SUSPENDED", "dict_value": "已暂停", "dict_label": "已暂停",
-             "sort_order": 3},
-            {"dict_type": "project_status", "dict_key": "CANCELLED", "dict_value": "已取消", "dict_label": "已取消",
-             "sort_order": 4},
+            {"dict_type": "project_status", "dict_key": "IN_PROGRESS", "dict_value": "进行中", "sort_order": 1},
+            {"dict_type": "project_status", "dict_key": "COMPLETED", "dict_value": "已完成", "sort_order": 2},
+            {"dict_type": "project_status", "dict_key": "SUSPENDED", "dict_value": "已暂停", "sort_order": 3},
+            {"dict_type": "project_status", "dict_key": "CANCELLED", "dict_value": "已取消", "sort_order": 4},
 
             # 项目级别
-            {"dict_type": "project_level", "dict_key": "NATIONAL", "dict_value": "国家级", "dict_label": "国家级",
-             "sort_order": 1},
-            {"dict_type": "project_level", "dict_key": "PROVINCIAL", "dict_value": "省部级", "dict_label": "省部级",
-             "sort_order": 2},
-            {"dict_type": "project_level", "dict_key": "MUNICIPAL", "dict_value": "市级", "dict_label": "市级",
-             "sort_order": 3},
-            {"dict_type": "project_level", "dict_key": "ENTERPRISE", "dict_value": "企业", "dict_label": "企业",
-             "sort_order": 4},
-            {"dict_type": "project_level", "dict_key": "OTHER", "dict_value": "其他", "dict_label": "其他",
-             "sort_order": 5},
+            {"dict_type": "project_level", "dict_key": "NATIONAL", "dict_value": "国家级", "sort_order": 1},
+            {"dict_type": "project_level", "dict_key": "PROVINCIAL", "dict_value": "省部级", "sort_order": 2},
+            {"dict_type": "project_level", "dict_key": "MUNICIPAL", "dict_value": "市级", "sort_order": 3},
+            {"dict_type": "project_level", "dict_key": "ENTERPRISE", "dict_value": "企业", "sort_order": 4},
+            {"dict_type": "project_level", "dict_key": "OTHER", "dict_value": "其他", "sort_order": 5},
 
             # 项目来源
             {"dict_type": "project_source", "dict_key": "NATIONAL_NATURAL", "dict_value": "国家自然科学基金",
-             "dict_label": "国家自然科学基金", "sort_order": 1},
+             "sort_order": 1},
             {"dict_type": "project_source", "dict_key": "NATIONAL_SOCIAL", "dict_value": "国家社会科学基金",
-             "dict_label": "国家社会科学基金", "sort_order": 2},
+             "sort_order": 2},
             {"dict_type": "project_source", "dict_key": "MINISTRY_EDUCATION", "dict_value": "教育部项目",
-             "dict_label": "教育部项目", "sort_order": 3},
+             "sort_order": 3},
             {"dict_type": "project_source", "dict_key": "PROVINCE_NATURAL", "dict_value": "省自然科学基金",
-             "dict_label": "省自然科学基金", "sort_order": 4},
+             "sort_order": 4},
             {"dict_type": "project_source", "dict_key": "ENTERPRISE_COOPERATION", "dict_value": "企业合作",
-             "dict_label": "企业合作", "sort_order": 5},
-            {"dict_type": "project_source", "dict_key": "HOSPITAL_INTERNAL", "dict_value": "院内项目",
-             "dict_label": "院内项目", "sort_order": 6},
+             "sort_order": 5},
+            {"dict_type": "project_source", "dict_key": "HOSPITAL_INTERNAL", "dict_value": "院内项目", "sort_order": 6},
 
             # 项目类型
-            {"dict_type": "project_type", "dict_key": "NATURAL_SCIENCE", "dict_value": "自然科学类",
-             "dict_label": "自然科学类", "sort_order": 1},
-            {"dict_type": "project_type", "dict_key": "SOCIAL_SCIENCE", "dict_value": "社会科学类",
-             "dict_label": "社会科学类", "sort_order": 2},
+            {"dict_type": "project_type", "dict_key": "NATURAL_SCIENCE", "dict_value": "自然科学类", "sort_order": 1},
+            {"dict_type": "project_type", "dict_key": "SOCIAL_SCIENCE", "dict_value": "社会科学类", "sort_order": 2},
             {"dict_type": "project_type", "dict_key": "TECHNOLOGY_DEVELOPMENT", "dict_value": "技术开发类",
-             "dict_label": "技术开发类", "sort_order": 3},
-            {"dict_type": "project_type", "dict_key": "CLINICAL_RESEARCH", "dict_value": "临床研究类",
-             "dict_label": "临床研究类", "sort_order": 4},
+             "sort_order": 3},
+            {"dict_type": "project_type", "dict_key": "CLINICAL_RESEARCH", "dict_value": "临床研究类", "sort_order": 4},
 
             # 成果类型
-            {"dict_type": "result_type", "dict_key": "PAPER", "dict_value": "论文", "dict_label": "论文",
-             "sort_order": 1},
-            {"dict_type": "result_type", "dict_key": "PATENT", "dict_value": "专利", "dict_label": "专利",
-             "sort_order": 2},
-            {"dict_type": "result_type", "dict_key": "SOFTWARE", "dict_value": "软件著作权", "dict_label": "软件著作权",
-             "sort_order": 3},
-            {"dict_type": "result_type", "dict_key": "AWARD", "dict_value": "获奖", "dict_label": "获奖",
-             "sort_order": 4},
-            {"dict_type": "result_type", "dict_key": "REPORT", "dict_value": "研究报告", "dict_label": "研究报告",
-             "sort_order": 5},
+            {"dict_type": "result_type", "dict_key": "PAPER", "dict_value": "论文", "sort_order": 1},
+            {"dict_type": "result_type", "dict_key": "PATENT", "dict_value": "专利", "sort_order": 2},
+            {"dict_type": "result_type", "dict_key": "SOFTWARE", "dict_value": "软件著作权", "sort_order": 3},
+            {"dict_type": "result_type", "dict_key": "AWARD", "dict_value": "获奖", "sort_order": 4},
+            {"dict_type": "result_type", "dict_key": "REPORT", "dict_value": "研究报告", "sort_order": 5},
         ]
 
         for item in default_data:

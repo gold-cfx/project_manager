@@ -258,7 +258,6 @@ def init_database():
                 dict_type VARCHAR(50) NOT NULL COMMENT '字典类型',
                 dict_key VARCHAR(50) NOT NULL COMMENT '字典键',
                 dict_value VARCHAR(100) NOT NULL COMMENT '字典值',
-                dict_label VARCHAR(100) NOT NULL COMMENT '显示标签',
                 sort_order INT DEFAULT 0 COMMENT '排序顺序',
                 is_active BOOLEAN DEFAULT TRUE COMMENT '是否启用',
                 description VARCHAR(200) COMMENT '描述',

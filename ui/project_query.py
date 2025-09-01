@@ -265,7 +265,7 @@ class ProjectQuery(QWidget):
         self.status_combo.addItem('全部')
         status_list = dict_utils.get_project_status()
         for status in status_list:
-            self.status_combo.addItem(status['label'])
+            self.status_combo.addItem(status['value'])
 
     def load_funding_units(self):
         """加载资助单位"""
@@ -281,7 +281,7 @@ class ProjectQuery(QWidget):
         self.level_combo.addItem('全部')
         level_list = dict_utils.get_project_levels()
         for level in level_list:
-            self.level_combo.addItem(level['label'])
+            self.level_combo.addItem(level['value'])
 
     def load_project_sources(self):
         """加载项目来源"""
@@ -290,7 +290,7 @@ class ProjectQuery(QWidget):
         self.project_source_combo.addItem('全部')
         source_list = dict_utils.get_project_sources()
         for source in source_list:
-            self.project_source_combo.addItem(source['label'])
+            self.project_source_combo.addItem(source['value'])
 
     def load_project_types(self):
         """加载项目类型"""
@@ -299,7 +299,7 @@ class ProjectQuery(QWidget):
         self.project_type_combo.addItem('全部')
         type_list = dict_utils.get_project_types()
         for type_item in type_list:
-            self.project_type_combo.addItem(type_item['label'])
+            self.project_type_combo.addItem(type_item['value'])
 
     def load_departments(self):
         # 加载科室

@@ -24,32 +24,32 @@ class DictUtils:
     def get_project_status(self) -> List[Dict[str, str]]:
         """获取项目状态列表"""
         items = self._logic.get_dict_items("project_status")
-        return [{"value": item.dict_value, "label": item.dict_label}
+        return [{"value": item.dict_value}
                 for item in items if item.is_active]
 
     def get_project_levels(self) -> List[Dict[str, str]]:
         """获取项目级别列表"""
 
         items = self._logic.get_dict_items("project_level")
-        return [{"value": item.dict_value, "label": item.dict_label}
+        return [{"value": item.dict_value}
                 for item in items if item.is_active]
 
     def get_project_sources(self) -> List[Dict[str, str]]:
         """获取项目来源列表"""
         items = self._logic.get_dict_items("project_source")
-        return [{"value": item.dict_value, "label": item.dict_label}
+        return [{"value": item.dict_value}
                 for item in items if item.is_active]
 
     def get_project_types(self) -> List[Dict[str, str]]:
         """获取项目类型列表"""
         items = self._logic.get_dict_items("project_type")
-        return [{"value": item.dict_value, "label": item.dict_label}
+        return [{"value": item.dict_value}
                 for item in items if item.is_active]
 
     def get_result_types(self) -> List[Dict[str, str]]:
         """获取成果类型列表"""
         items = self._logic.get_dict_items("result_type")
-        return [{"value": item.dict_value, "label": item.dict_label}
+        return [{"value": item.dict_value}
                 for item in items if item.is_active]
 
     def validate_dict_value(self, dict_type: str, dict_value: str) -> bool:
