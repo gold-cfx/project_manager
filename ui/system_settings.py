@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import (
 )
 
 from config import settings
+from config.settings import pod_ip
 
 
 class SystemSettings(QWidget):
@@ -55,7 +56,7 @@ class SystemSettings(QWidget):
 
         # 本地服务器配置
         self.local_host_edit = QLineEdit()
-        self.local_host_edit.setPlaceholderText('默认: 127.0.0.1')
+        self.local_host_edit.setPlaceholderText(f'默认: {pod_ip}')
         self.local_port_edit = QLineEdit()
         self.local_port_edit.setPlaceholderText('默认: 5001')
         file_server_layout.addRow('本地主机地址', self.local_host_edit)
@@ -117,7 +118,7 @@ class SystemSettings(QWidget):
         is_remote = self.remote_server_radio.isChecked()
 
         # 本地服务器配置
-        self.local_host_edit.setEnabled(not is_remote)
+        self.local_host_edit.setEnabled(False)
         self.local_port_edit.setEnabled(not is_remote)
         self.file_server_dir_edit.setEnabled(not is_remote)
         self.select_file_server_dir_button.setEnabled(not is_remote)
@@ -142,7 +143,7 @@ class SystemSettings(QWidget):
             self.local_server_radio.setChecked(True)
 
         # 本地服务器配置
-        self.local_host_edit.setText(settings.FILE_SERVER_CONFIG.get('host', '127.0.0.1'))
+        self.local_host_edit.setText(pod_ip)
         self.local_port_edit.setText(str(settings.FILE_SERVER_CONFIG.get('port', 5001)))
 
         # 远程服务器配置
@@ -168,7 +169,7 @@ class SystemSettings(QWidget):
         file_server_config = {
             'enabled': True,  # 始终启用
             'remote_server': self.remote_server_radio.isChecked(),
-            'host': self.local_host_edit.text(),
+            'host': "0.0.0.0",
             'port': int(self.local_port_edit.text()) if self.local_port_edit.text().isdigit() else 5001,
             'remote_host': self.remote_host_edit.text(),
             'remote_port': int(self.remote_port_edit.text()) if self.remote_port_edit.text().isdigit() else 5001,

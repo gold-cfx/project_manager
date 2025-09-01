@@ -5,8 +5,11 @@
 """
 import json
 import os
+import socket
 # 确保datetime模块被导入
 from datetime import datetime
+
+pod_ip = socket.gethostbyname(socket.gethostname())
 
 config_dir = os.path.dirname(__file__)
 root_dir = os.path.dirname(config_dir)

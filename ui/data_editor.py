@@ -199,10 +199,13 @@ class ResultDialog(QDialog):
                 success, error = temp_client.download_file(file_path, save_path)
                 if success:
                     QMessageBox.information(self, '成功', '附件下载成功')
+                    super().accept()
                 else:
                     QMessageBox.warning(self, '错误', f'下载失败: {error}')
+                    super().accept()
         except Exception as e:
             QMessageBox.warning(self, '错误', f'下载失败: {e}')
+            super().accept()
 
     def get_result_data(self):
         """获取成果数据"""
@@ -609,7 +612,9 @@ class BaseProjectEditor(object):
                         self.results_data[i]['date'] = updated_result_data['date']
                         break
                 # Update table items directly
-                self.result_table.setItem(row, 0, QTableWidgetItem(updated_result_data['type']))
+                type_col = QTableWidgetItem(updated_result_data['type'])
+                type_col.setData(Qt.UserRole, result_data['id'])
+                self.result_table.setItem(row, 0, type_col)
                 self.result_table.setItem(row, 1, QTableWidgetItem(updated_result_data['name']))
                 self.result_table.setItem(row, 2, QTableWidgetItem(updated_result_data['date']))
         else:
@@ -864,6 +869,12 @@ class BaseProjectEditor(object):
             else:
                 QMessageBox.warning(self.widget, '保存失败', '项目信息保存失败，请重试')
 
+    def accept(self):
+        pass
+
+    def on_save_success(self):
+        pass
+
     def reset_form(self):
         # 重置表单
         self.project_name_edit.clear()
@@ -940,13 +951,13 @@ class ProjectEditorDialog(QDialog):
 
         try:
             self.base_editor.init_ui(self)
-            self.base_editor.load_funding_units()
 
             # 如果提供了项目ID，加载项目数据
             if project_id:
                 self.base_editor.load_project_data(project_id)
 
             self.base_editor.sub_cancel = self.reject
+            self.base_editor.accept = self.accept
             print('ProjectEditorDialog初始化完成')
         except Exception as e:
             print(f'ProjectEditorDialog初始化出错: {str(e)}')
