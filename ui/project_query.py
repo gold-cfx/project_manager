@@ -635,6 +635,12 @@ class ProjectQuery(QWidget):
             QMessageBox.warning(self, '提示', '请先选择项目')
             return
 
+        # 检查用户权限
+        from utils.session import SessionManager
+        if not SessionManager.is_admin():
+            QMessageBox.warning(self, '权限不足', '只有管理员才能删除项目')
+            return
+
         reply = QMessageBox.question(self, '确认', f'确定要删除选中的{len(self.selected_rows)}个项目吗？',
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 

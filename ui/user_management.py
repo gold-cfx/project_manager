@@ -372,6 +372,12 @@ class UserManagementWidget(QWidget):
                 
     def on_delete_user(self):
         """删除用户"""
+        # 检查管理员权限
+        from utils.session import SessionManager
+        if not SessionManager.is_admin():
+            QMessageBox.warning(self, '权限不足', '只有管理员才能删除用户')
+            return
+            
         current_row = self.table.currentRow()
         if current_row < 0:
             QMessageBox.warning(self, '提示', '请先选择要删除的用户！')

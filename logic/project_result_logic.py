@@ -59,7 +59,15 @@ class ProjectResultLogic:
             
         Returns:
             bool: 删除是否成功
+            
+        Raises:
+            PermissionError: 当前用户无删除权限
         """
+        # 检查管理员权限
+        from utils.session import SessionManager
+        if not SessionManager.is_admin():
+            raise PermissionError("只有管理员才能删除项目成果")
+            
         return self.project_result_dao.delete(result_id)
 
     def get_project_result_by_id(self, result_id: int) -> Optional[ProjectResult]:

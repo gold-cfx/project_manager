@@ -104,6 +104,12 @@ class ReminderManagement(QWidget):
 
     def delete_reminder(self):
         # 删除提醒
+        # 检查管理员权限
+        from utils.session import SessionManager
+        if not SessionManager.is_admin():
+            QMessageBox.warning(self, '权限不足', '只有管理员才能删除提醒')
+            return
+            
         selected_row = self.reminder_table.currentRow()
         if selected_row < 0:
             QMessageBox.warning(self, '操作错误', '请先选择要删除的提醒')

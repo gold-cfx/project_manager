@@ -165,6 +165,9 @@ class LoginDialog(QDialog):
             authenticated_user = self.user_logic.authenticate_user(username, password)
             if authenticated_user:
                 self.current_user = authenticated_user
+                # 设置用户会话
+                from utils.session import SessionManager
+                SessionManager.set_current_user(authenticated_user)
                 self.login_success.emit(authenticated_user)
                 self.accept()
             else:

@@ -60,15 +60,24 @@ class ProjectLogic:
         return self.project_dao.update(project_id, project_data)
 
     @log_operation("删除项目")
-    def delete_project(self, project_id: int) -> bool:
+    def delete_project(self, project_id: int, operator_id: int = None) -> bool:
         """删除项目
         
         Args:
             project_id: 项目ID
+            operator_id: 操作者ID，用于权限验证（可选）
             
         Returns:
             bool: 删除是否成功
+            
+        Raises:
+            PermissionError: 当前用户无删除权限
         """
+        # 检查管理员权限
+        from utils.session import SessionManager
+        if not SessionManager.is_admin():
+            raise PermissionError("只有管理员才能删除项目")
+            
         return self.project_dao.delete(project_id)
 
     def get_project_by_id(self, project_id: int) -> Optional[Project]:

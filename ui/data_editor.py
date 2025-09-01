@@ -622,6 +622,12 @@ class BaseProjectEditor(object):
 
     def delete_selected_result(self):
         # 删除选中的成果
+        # 检查管理员权限
+        from utils.session import SessionManager
+        if not SessionManager.is_admin():
+            QMessageBox.warning(self.widget, '权限不足', '只有管理员才能删除项目成果')
+            return
+            
         selected_rows = self.result_table.selectionModel().selectedRows()
         if not selected_rows:
             QMessageBox.warning(self.widget, '操作提示', '请先选择要删除的成果')

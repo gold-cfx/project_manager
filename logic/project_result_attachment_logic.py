@@ -137,7 +137,22 @@ class ProjectResultAttachmentLogic:
         return success
 
     def delete_attachment(self, attachment_id: int) -> bool:
-        """删除项目成果附件"""
+        """删除项目成果附件
+        
+        Args:
+            attachment_id: 附件ID
+            
+        Returns:
+            bool: 删除是否成功
+            
+        Raises:
+            PermissionError: 当前用户无删除权限
+        """
+        # 检查管理员权限
+        from utils.session import SessionManager
+        if not SessionManager.is_admin():
+            raise PermissionError("只有管理员才能删除项目成果附件")
+            
         attachment = self.dao.get_by_id(attachment_id)
         if not attachment:
             return False
@@ -162,7 +177,22 @@ class ProjectResultAttachmentLogic:
         return success
 
     def delete_result_attachments(self, project_result_id: int) -> bool:
-        """删除项目成果的所有附件"""
+        """删除项目成果的所有附件
+        
+        Args:
+            project_result_id: 项目成果ID
+            
+        Returns:
+            bool: 删除是否成功
+            
+        Raises:
+            PermissionError: 当前用户无删除权限
+        """
+        # 检查管理员权限
+        from utils.session import SessionManager
+        if not SessionManager.is_admin():
+            raise PermissionError("只有管理员才能删除项目成果附件")
+            
         attachments = self.dao.get_by_project_result_id(project_result_id)
 
         # 删除数据库记录

@@ -77,7 +77,15 @@ class UserLogic:
             
         Returns:
             bool: 删除是否成功
+            
+        Raises:
+            PermissionError: 当前用户无删除权限
         """
+        # 检查管理员权限
+        from utils.session import SessionManager
+        if not SessionManager.is_admin():
+            raise PermissionError("只有管理员才能删除用户")
+            
         # 不能删除最后一个管理员
         user = UserDAO.get_user_by_id(user_id)
         if user and user.role == "admin":
