@@ -27,6 +27,10 @@ os.environ['QT_FONT_DPI'] = '96'
 def main():
     # 初始化数据库
     init_database()
+    
+    # 初始化数据字典
+    from init_data_dict import initialize_data_dict
+    initialize_data_dict()
 
     # 启动文件服务器
     try:

@@ -114,8 +114,15 @@ class ChartDialog(QDialog):
     def generate_level_count_charts(self):
         """按级别统计项目数量"""
         # 准备数据
-        from models.project import ProjectLevel
-        level_counts = {level.value: 0 for level in ProjectLevel}
+        from utils.dict_utils import dict_utils
+        level_list = dict_utils.get_project_levels()
+        level_counts = {}
+        
+        # 初始化所有级别的计数为0
+        for level in level_list:
+            level_counts[level['value']] = 0
+        
+        # 统计每个级别的项目数量
         for project in self.projects_data:
             level = project['level']
             if level in level_counts:
@@ -209,8 +216,15 @@ class ChartDialog(QDialog):
     def generate_level_funding_charts(self):
         """按级别统计资助金额"""
         # 准备数据
-        from models.project import ProjectLevel
-        level_funding = {level.value: 0 for level in ProjectLevel}
+        from utils.dict_utils import dict_utils
+        level_list = dict_utils.get_project_levels()
+        level_funding = {}
+        
+        # 初始化所有级别的金额为0
+        for level in level_list:
+            level_funding[level['value']] = 0
+        
+        # 统计每个级别的资助金额
         for project in self.projects_data:
             level = project['level']
             try:

@@ -6,27 +6,9 @@
 """
 from datetime import date, datetime
 from decimal import Decimal
-from enum import Enum
 from typing import Optional, List, Dict, Any
 
 from pydantic import BaseModel, Field, validator
-
-
-class ProjectStatus(str, Enum):
-    """项目状态枚举"""
-    IN_PROGRESS = "进行中"
-    COMPLETED = "已完成"
-    SUSPENDED = "已暂停"
-    CANCELLED = "已取消"
-
-
-class ProjectLevel(str, Enum):
-    """项目级别枚举"""
-    NATIONAL = "国家级"
-    PROVINCIAL = "省部级"
-    MUNICIPAL = "市级"
-    ENTERPRISE = "企业"
-    OTHER = "其他"
 
 
 class ProjectBase(BaseModel):
@@ -37,14 +19,14 @@ class ProjectBase(BaseModel):
     phone: str = Field(..., description="联系电话", max_length=20)
     project_source: str = Field("", description="项目来源", max_length=100)
     project_type: str = Field("", description="项目类型", max_length=50)
-    level: ProjectLevel = Field(..., description="项目级别")
+    level: str = Field(..., description="项目级别", max_length=50)
     funding_amount: Decimal = Field(..., description="资助金额", ge=0)
     funding_unit: str = Field(..., description="资助单位", max_length=100)
     approval_year: str = Field("", description="批准年份", max_length=4)
     project_number: str = Field("", description="项目编号", max_length=50)
     start_date: date = Field(..., description="开始日期")
     end_date: date = Field(..., description="结束日期")
-    status: ProjectStatus = Field(ProjectStatus.IN_PROGRESS, description="项目状态")
+    status: str = Field("进行中", description="项目状态", max_length=50)
 
     @validator('end_date')
     def end_date_must_be_after_start_date(cls, v, values):
@@ -100,9 +82,9 @@ class ProjectUpdate(ProjectBase):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     funding_unit: Optional[str] = None
-    level: Optional[ProjectLevel] = None
+    level: Optional[str] = None
     funding_amount: Optional[Decimal] = None
-    status: Optional[ProjectStatus] = None
+    status: Optional[str] = None
 
 
 class Project(ProjectBase):

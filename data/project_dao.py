@@ -8,7 +8,7 @@ from typing import List, Optional, Dict, Any
 from pymysql.cursors import Cursor, DictCursor
 
 from data.db_connection import with_db_connection
-from models.project import Project, ProjectCreate, ProjectUpdate, ProjectStatus
+from models.project import Project, ProjectCreate, ProjectUpdate
 
 
 class ProjectDAO:

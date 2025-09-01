@@ -259,19 +259,47 @@ class ProjectQuery(QWidget):
         main_layout.addLayout(action_btn_layout)
 
     def load_project_status(self):
-        # 加载项目状态
-        from models.project import ProjectStatus
-        self.status_combo.addItems([status.value for status in ProjectStatus])
+        """加载项目状态"""
+        from utils.dict_utils import dict_utils
+        self.status_combo.clear()
+        self.status_combo.addItem('全部')
+        status_list = dict_utils.get_project_status()
+        for status in status_list:
+            self.status_combo.addItem(status['label'])
 
     def load_funding_units(self):
-        # 加载资助单位
+        """加载资助单位"""
         funding_units = self.query_logic.get_all_funding_units()
+        self.funding_unit_combo.clear()
+        self.funding_unit_combo.addItem('全部')
         self.funding_unit_combo.addItems(funding_units)
 
     def load_project_levels(self):
-        # 加载项目级别
-        from models.project import ProjectLevel
-        self.level_combo.addItems([status.value for status in ProjectLevel])
+        """加载项目级别"""
+        from utils.dict_utils import dict_utils
+        self.level_combo.clear()
+        self.level_combo.addItem('全部')
+        level_list = dict_utils.get_project_levels()
+        for level in level_list:
+            self.level_combo.addItem(level['label'])
+
+    def load_project_sources(self):
+        """加载项目来源"""
+        from utils.dict_utils import dict_utils
+        self.project_source_combo.clear()
+        self.project_source_combo.addItem('全部')
+        source_list = dict_utils.get_project_sources()
+        for source in source_list:
+            self.project_source_combo.addItem(source['label'])
+
+    def load_project_types(self):
+        """加载项目类型"""
+        from utils.dict_utils import dict_utils
+        self.project_type_combo.clear()
+        self.project_type_combo.addItem('全部')
+        type_list = dict_utils.get_project_types()
+        for type_item in type_list:
+            self.project_type_combo.addItem(type_item['label'])
 
     def load_departments(self):
         # 加载科室

@@ -6,7 +6,7 @@
 from typing import List, Optional, Dict, Any
 
 from data.project_dao import ProjectDAO
-from models.project import Project, ProjectCreate, ProjectUpdate, ProjectStatus
+from models.project import Project, ProjectCreate, ProjectUpdate
 from utils.decorators import validate_model_data, log_operation
 
 
@@ -150,7 +150,7 @@ class ProjectLogic:
             "total_funding": total_funding
         }
 
-    def change_project_status(self, project_id: int, status: ProjectStatus) -> bool:
+    def change_project_status(self, project_id: int, status: str) -> bool:
         """更改项目状态
         
         Args:

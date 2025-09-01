@@ -251,6 +251,24 @@ def init_database():
         """
         cursor.execute(create_help_info_table)
 
+        # 创建数据字典表
+        create_data_dicts_table = """
+            CREATE TABLE IF NOT EXISTS data_dicts (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                dict_type VARCHAR(50) NOT NULL COMMENT '字典类型',
+                dict_key VARCHAR(50) NOT NULL COMMENT '字典键',
+                dict_value VARCHAR(100) NOT NULL COMMENT '字典值',
+                dict_label VARCHAR(100) NOT NULL COMMENT '显示标签',
+                sort_order INT DEFAULT 0 COMMENT '排序顺序',
+                is_active BOOLEAN DEFAULT TRUE COMMENT '是否启用',
+                description VARCHAR(200) COMMENT '描述',
+                create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY uk_type_key (dict_type, dict_key)
+            )
+        """
+        cursor.execute(create_data_dicts_table)
+
         # 创建用户表
         create_users_table = """
             CREATE TABLE IF NOT EXISTS users (

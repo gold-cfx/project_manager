@@ -6,7 +6,7 @@
 """
 
 from .user import User, UserCreate, UserUpdate, UserLogin, UserRole, UserStatus
-from .project import Project, ProjectCreate, ProjectUpdate, ProjectStatus, ProjectLevel
+from .project import Project, ProjectCreate, ProjectUpdate
 from .project_result import ProjectResult, ProjectResultCreate, ProjectResultUpdate
 from .project_result_attachment import ProjectResultAttachment, ProjectResultAttachmentCreate
 from .reminder import Reminder, ReminderCreate, ReminderUpdate, ReminderType, ReminderStatus, ReminderWay

@@ -16,6 +16,7 @@ from PyQt5.QtWidgets import (
 from logic.project_logic import ProjectLogic
 from logic.project_result_attachment_logic import ProjectResultAttachmentLogic
 from logic.project_result_logic import ProjectResultLogic
+from utils.dict_utils import dict_utils
 from utils.validator import Validator
 
 
@@ -46,9 +47,9 @@ class ResultDialog(QDialog):
 
         # 成果类型
         self.result_type_combo = QComboBox()
-        # 使用 ProjectResultType 枚举中定义的值
-        from models.project_result import ProjectResultType
-        self.result_type_combo.addItems([result_type.value for result_type in ProjectResultType])
+        # 使用数据字典中的成果类型
+        result_types = dict_utils.get_type_values(dict_utils.get_result_types())
+        self.result_type_combo.addItems(result_types)
         form_layout.addRow('成果类型 *', self.result_type_combo)
 
         # 成果名称
@@ -291,20 +292,22 @@ class BaseProjectEditor(object):
 
         # 项目来源
         self.source_combo = QComboBox()
-        self.source_combo.addItems(
-            ['请选择项目来源', '国家自然科学基金', '科技部项目', '教育部项目', '省级科技计划', '市级科技计划', '其他'])
+        sources = dict_utils.get_type_values(dict_utils.get_project_sources())
+        self.source_combo.addItems(sources)
         basic_info_layout1.addRow('项目来源 *', self.source_combo)
 
         # 项目类型
         self.type_combo = QComboBox()
-        self.type_combo.addItems(['纵向课题', '横向课题', '研究者发起的临床研究项目', 'GCP项目'])
+
+        types = dict_utils.get_type_values(dict_utils.get_project_types())
+        self.type_combo.addItems(types)
         basic_info_layout2.addRow('项目类型 *', self.type_combo)
 
         # 项目级别
         self.level_combo = QComboBox()
-        # 使用 ProjectLevel 枚举中定义的值
-        from models.project import ProjectLevel
-        self.level_combo.addItems([level.value for level in ProjectLevel])
+        # 使用数据字典中的项目级别
+        levels = dict_utils.get_type_values(dict_utils.get_project_levels())
+        self.level_combo.addItems(levels)
         basic_info_layout1.addRow('项目级别 *', self.level_combo)
 
         # 资助经费（万元）
@@ -329,9 +332,9 @@ class BaseProjectEditor(object):
         basic_info_layout1.addRow('项目编号 *', self.project_code_edit)
         # 项目状态
         self.status_combo = QComboBox()
-        # 使用 ProjectStatus 枚举中定义的值
-        from models.project import ProjectStatus
-        self.status_combo.addItems([status.value for status in ProjectStatus])
+        # 使用数据字典中的项目状态
+        statuses = dict_utils.get_type_values(dict_utils.get_project_status())
+        self.status_combo.addItems(statuses)
         basic_info_layout2.addRow('项目状态 *', self.status_combo)
 
         # 项目开始时间
@@ -627,7 +630,7 @@ class BaseProjectEditor(object):
         if not SessionManager.is_admin():
             QMessageBox.warning(self.widget, '权限不足', '只有管理员才能删除项目成果')
             return
-            
+
         selected_rows = self.result_table.selectionModel().selectedRows()
         if not selected_rows:
             QMessageBox.warning(self.widget, '操作提示', '请先选择要删除的成果')

@@ -17,6 +17,7 @@ from .project_registration import ProjectRegistration
 from .reminder_management import ReminderManagement
 from .system_settings import SystemSettings
 from .user_management import UserManagementWidget
+from .data_dict_management import DataDictManagement
 from models.user import User
 
 
@@ -93,6 +94,11 @@ class MainWindow(QMainWindow):
         self.add_menu_item('项目查询', 'project_query')
         self.add_menu_item('提醒管理', 'reminder_management')
         self.add_menu_item('系统设置', 'system_settings')
+        
+        # 管理员专用菜单项
+        if self.current_user.role == "admin":
+            self.add_menu_item('字典管理', 'data_dict_management')
+            
         self.add_menu_item('帮助文档', 'help_doc')
 
         # 连接菜单点击信号
@@ -170,6 +176,18 @@ class MainWindow(QMainWindow):
         self.help_document.show()
         self.status_bar.showMessage('帮助文档')
 
+    def show_data_dict_management(self):
+        # 显示数据字典管理界面（仅管理员）
+        if self.current_user.role != "admin":
+            QMessageBox.warning(self, '权限不足', '只有管理员才能访问字典管理功能')
+            return
+            
+        self.clear_content_area()
+        self.data_dict_management = DataDictManagement()
+        self.content_layout.addWidget(self.data_dict_management)
+        self.data_dict_management.show()
+        self.status_bar.showMessage('字典管理')
+
 
 
     def on_menu_clicked(self, item):
@@ -183,5 +201,7 @@ class MainWindow(QMainWindow):
             self.show_reminder_management()
         elif data == 'system_settings':
             self.show_system_settings()
+        elif data == 'data_dict_management':
+            self.show_data_dict_management()
         elif data == 'help_doc':
             self.show_help_document()
