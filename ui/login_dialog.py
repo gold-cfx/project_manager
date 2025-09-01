@@ -27,17 +27,17 @@ class LoginDialog(QDialog):
     def init_ui(self):
         """初始化UI"""
         self.setWindowTitle('科研项目管理系统 - 登录')
-        self.setFixedSize(500, 400)
+        self.setFixedSize(500, 300)
         self.setWindowFlags(Qt.WindowCloseButtonHint)
         
         # 主布局
         layout = QVBoxLayout()
-        layout.setSpacing(20)
+        layout.setSpacing(10)
         layout.setContentsMargins(40, 40, 40, 40)
         
         # 标题
         title_label = QLabel('科研项目管理系统')
-        title_label.setFont(QFont('Microsoft YaHei', 18, QFont.Bold))
+        title_label.setFont(QFont('Microsoft YaHei', 11, QFont.Bold))
         title_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(title_label)
         #
@@ -70,11 +70,11 @@ class LoginDialog(QDialog):
         password_layout.addWidget(password_label)
         password_layout.addWidget(self.password_edit)
         layout.addLayout(password_layout)
-        
-        # 记住密码
-        self.remember_checkbox = QCheckBox('记住密码')
-        self.remember_checkbox.setFont(QFont('Microsoft YaHei', 10))
-        layout.addWidget(self.remember_checkbox)
+        #
+        # # 记住密码
+        # self.remember_checkbox = QCheckBox('记住密码')
+        # self.remember_checkbox.setFont(QFont('Microsoft YaHei', 10))
+        # layout.addWidget(self.remember_checkbox)
         
         # 按钮
         button_layout = QHBoxLayout()

@@ -241,9 +241,13 @@ class ProjectQuery(QWidget):
         delete_btn.clicked.connect(self.batch_delete)
         action_btn_layout.addWidget(delete_btn)
 
-        export_btn = QPushButton('数据导出')
+        export_btn = QPushButton('导出CSV')
         export_btn.clicked.connect(self.export_results)
         action_btn_layout.addWidget(export_btn)
+
+        export_excel_btn = QPushButton('导出Excel')
+        export_excel_btn.clicked.connect(self.export_to_excel)
+        action_btn_layout.addWidget(export_excel_btn)
 
         # 添加图表按钮
         chart_btn = QPushButton('根据查询结果显示统计图表')
@@ -699,5 +703,39 @@ class ProjectQuery(QWidget):
                     writer.writerow(row_data)
 
             QMessageBox.information(self, '成功', f'结果已导出到: {file_path}')
+        except Exception as e:
+            QMessageBox.critical(self, '错误', f'导出失败: {str(e)}')
+
+    def export_to_excel(self):
+        """导出查询结果到Excel文件"""
+        if not hasattr(self, 'projects_data') or not self.projects_data:
+            QMessageBox.information(self, '提示', '没有查询结果可导出')
+            return
+        if not self.selected_rows:
+            QMessageBox.warning(self, '提示', '请先选择项目')
+            return
+
+        # 获取保存路径
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, '导出到Excel', os.path.expanduser('~'), 'Excel文件 (*.xlsx)'
+        )
+
+        if not file_path:
+            return
+
+        try:
+            from utils.excel_handler import ExcelExporter
+            exporter = ExcelExporter()
+
+            # 筛选选中的项目数据
+            selected_projects = [p for p in self.projects_data if p["id"] in self.selected_rows]
+
+            success = exporter.export_projects_to_excel(selected_projects, file_path)
+
+            if success:
+                QMessageBox.information(self, '成功', f'项目数据已导出到: {file_path}')
+            else:
+                QMessageBox.critical(self, '错误', '导出失败')
+
         except Exception as e:
             QMessageBox.critical(self, '错误', f'导出失败: {str(e)}')
