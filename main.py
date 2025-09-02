@@ -66,7 +66,8 @@ def main():
         main_window = MainWindow(current_user)
         main_window.show()
 
-        # 初始化定时提醒
+        # 设置主窗口引用并初始化定时提醒
+        auto_reminder.set_main_window(main_window)
         auto_reminder.initialize_timer()
 
         # 运行应用程序

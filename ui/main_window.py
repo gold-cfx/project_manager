@@ -282,3 +282,12 @@ class MainWindow(QMainWindow):
             event.ignore()
         else:
             event.accept()
+
+    def show_msg(self, title, msg):
+        if hasattr(self, 'tray_icon') and self.tray_icon.isVisible():
+            self.tray_icon.showMessage(
+                title,
+                msg,
+                QSystemTrayIcon.Information,
+                2000
+            )

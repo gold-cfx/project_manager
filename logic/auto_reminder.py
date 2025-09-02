@@ -7,12 +7,13 @@ import json
 import os
 from typing import List
 
-from PyQt5.QtCore import QObject, pyqtSignal, QTimer
+from PyQt5.QtCore import QObject, pyqtSignal, QTimer, Qt
 from PyQt5.QtWidgets import QMessageBox
 
+from config.settings import config_dir
 from logic.reminder_logic import ReminderLogic
 from models.reminder import Reminder
-
+from threading import Thread
 
 class AutoReminder(QObject):
     """自动提醒类，负责在系统启动时检查并显示需要提醒的项目"""
@@ -24,6 +25,7 @@ class AutoReminder(QObject):
         self.reminder_logic = ReminderLogic()
         self.timer = None
         self.reminder_interval_hours = 1
+        self.main_window = None
         
         # 加载定时任务配置
         self.load_timer_config()
@@ -40,10 +42,13 @@ class AutoReminder(QObject):
             # 启动定时器
             self.start_timer()
 
+    def set_main_window(self, main_window):
+        """设置主窗口引用，用于消息框的父窗口"""
+        self.main_window = main_window
+
     def load_timer_config(self):
         """加载定时任务配置"""
         try:
-            config_dir = os.path.join(os.path.dirname(__file__), '..', 'config')
             os.makedirs(config_dir, exist_ok=True)
             config_path = os.path.join(config_dir, 'reminder_config.json')
             if os.path.exists(config_path):
@@ -61,7 +66,6 @@ class AutoReminder(QObject):
     def save_timer_config(self):
         """保存定时任务配置"""
         try:
-            config_dir = os.path.join(os.path.dirname(__file__), '..', 'config')
             os.makedirs(config_dir, exist_ok=True)
             config_path = os.path.join(config_dir, 'reminder_config.json')
             config = {
@@ -148,6 +152,15 @@ class AutoReminder(QObject):
         # 对提醒按日期排序
         reminders.sort(key=lambda r: r.start_date)
 
+        # 在显示提醒前，确保主窗口可见
+        if self.main_window:
+            # 如果主窗口被最小化到系统托盘，先显示主窗口
+            if not self.main_window.isVisible():
+                self.main_window.show_normal()
+            # 确保主窗口在最前
+            self.main_window.raise_()
+            self.main_window.activateWindow()
+
         # 为每个提醒单独显示对话框
         for i, reminder in enumerate(reminders, 1):
             # 创建提醒消息
@@ -156,8 +169,14 @@ class AutoReminder(QObject):
             message += f"类型：{reminder.reminder_type}\n"
             message += f"内容：{reminder.content}\n"
 
-            # 创建自定义消息框
-            msg_box = QMessageBox()
+            # 创建自定义消息框，始终使用主窗口作为父窗口
+            if self.main_window:
+                msg_box = QMessageBox(self.main_window)
+            else:
+                # 如果没有主窗口引用，创建无父窗口的消息框（备用方案）
+                msg_box = QMessageBox()
+                msg_box.setWindowModality(Qt.ApplicationModal)
+
             msg_box.setWindowTitle("项目提醒")
             msg_box.setText(message)
             msg_box.setIcon(QMessageBox.Information)
