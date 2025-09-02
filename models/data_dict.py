@@ -14,10 +14,10 @@ from pydantic import BaseModel, Field
 class DictType(str, Enum):
     """字典类型枚举"""
     PROJECT_STATUS = "project_status"  # 项目状态
-    PROJECT_LEVEL = "project_level"    # 项目级别
+    PROJECT_LEVEL = "project_level"  # 项目级别
     PROJECT_SOURCE = "project_source"  # 项目来源
-    PROJECT_TYPE = "project_type"      # 项目类型
-    RESULT_TYPE = "result_type"         # 成果类型
+    PROJECT_TYPE = "project_type"  # 项目类型
+    RESULT_TYPE = "result_type"  # 成果类型
 
 
 class DataDictBase(BaseModel):

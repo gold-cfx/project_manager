@@ -9,7 +9,7 @@
     "enabled": true,
     "remote_server": false,
     "host": "0.0.0.0",
-    "port": 50031,
+    "port": 5003,
     "remote_host": "192.168.103.89",
     "remote_port": 50031,
     "root_dir": "C:/Users/USER/Pictures"

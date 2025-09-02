@@ -5,11 +5,10 @@
 科研项目管理系统 - 用户界面模块
 """
 
-from .main_window import MainWindow
+from .help_document import HelpDocument
 from .login_dialog import LoginDialog
-from .project_registration import ProjectRegistration
+from .main_window import MainWindow
 from .project_query import ProjectQuery
+from .project_registration import ProjectRegistration
 from .reminder_management import ReminderManagement
 from .system_settings import SystemSettings
-from .help_document import HelpDocument
-from .user_management import UserManagementWidget

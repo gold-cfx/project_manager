@@ -22,6 +22,7 @@ from .project_query import ProjectQuery
 from .project_registration import ProjectRegistration
 from .reminder_management import ReminderManagement
 from .system_settings import SystemSettings
+from .user_management import UserManagementWidget
 
 
 class MainWindow(QMainWindow):
@@ -105,6 +106,7 @@ class MainWindow(QMainWindow):
         # 管理员专用菜单项
         if self.current_user.role == "admin":
             self.add_menu_item('字典管理', 'data_dict_management')
+            self.add_menu_item('用户管理', 'user_management')
 
         self.add_menu_item('帮助文档', 'help_doc')
 
@@ -195,6 +197,19 @@ class MainWindow(QMainWindow):
         self.data_dict_management.show()
         self.status_bar.showMessage('字典管理')
 
+    def show_user_management(self):
+        # 显示用户管理界面（仅管理员）
+        if self.current_user.role != "admin":
+            QMessageBox.warning(self, '权限不足', '只有管理员才能访问用户管理功能')
+            return
+
+        self.clear_content_area()
+
+        self.user_management = UserManagementWidget(self.current_user)
+        self.content_layout.addWidget(self.user_management)
+        self.user_management.show()
+        self.status_bar.showMessage('用户管理')
+
     def on_menu_clicked(self, item):
         # 处理菜单点击事件
         data = item.data(Qt.UserRole)
@@ -208,6 +223,8 @@ class MainWindow(QMainWindow):
             self.show_system_settings()
         elif data == 'data_dict_management':
             self.show_data_dict_management()
+        elif data == 'user_management':
+            self.show_user_management()
         elif data == 'help_doc':
             self.show_help_document()
 

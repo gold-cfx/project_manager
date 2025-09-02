@@ -237,7 +237,7 @@ class UserDAO:
             Optional[User]: 认证成功返回用户信息，失败返回None
         """
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
-        
+
         # 首先检查用户是否存在
         sql = """
             SELECT id, username, password, real_name, role, status, 
@@ -246,18 +246,18 @@ class UserDAO:
         """
         cursor.execute(sql, (username,))
         row = cursor.fetchone()
-        
+
         if not row:
             return None
-            
+
         # 检查密码是否正确
         if row['password'] != hashed_password:
             return None
-            
+
         # 检查用户状态
         if row['status'] != 'active':
             return None
-            
+
         # 更新最后登录时间
         update_sql = "UPDATE users SET last_login = NOW() WHERE id = %s"
         cursor.execute(update_sql, (row['id'],))

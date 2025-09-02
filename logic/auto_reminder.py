@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import QMessageBox
 from config.settings import config_dir
 from logic.reminder_logic import ReminderLogic
 from models.reminder import Reminder
-from threading import Thread
+
 
 class AutoReminder(QObject):
     """自动提醒类，负责在系统启动时检查并显示需要提醒的项目"""
@@ -26,19 +26,19 @@ class AutoReminder(QObject):
         self.timer = None
         self.reminder_interval_hours = 1
         self.main_window = None
-        
+
         # 加载定时任务配置
         self.load_timer_config()
-        
+
     def initialize_timer(self):
         """初始化定时器（在QApplication创建后调用）"""
         if self.timer is None:
             self.timer = QTimer()
             self.timer.timeout.connect(self.check_and_show_reminders)
-            
+
             # 启动时立即检查一次
             self.check_and_show_reminders()
-            
+
             # 启动定时器
             self.start_timer()
 

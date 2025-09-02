@@ -77,7 +77,7 @@ class ProjectLogic:
         from utils.session import SessionManager
         if not SessionManager.is_admin():
             raise PermissionError("只有管理员才能删除项目")
-            
+
         return self.project_dao.delete(project_id)
 
     def get_project_by_id(self, project_id: int) -> Optional[Project]:

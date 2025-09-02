@@ -117,11 +117,11 @@ class ChartDialog(QDialog):
         from utils.dict_utils import dict_utils
         level_list = dict_utils.get_project_levels()
         level_counts = {}
-        
+
         # 初始化所有级别的计数为0
         for level in level_list:
             level_counts[level['value']] = 0
-        
+
         # 统计每个级别的项目数量
         for project in self.projects_data:
             level = project['level']
@@ -219,11 +219,11 @@ class ChartDialog(QDialog):
         from utils.dict_utils import dict_utils
         level_list = dict_utils.get_project_levels()
         level_funding = {}
-        
+
         # 初始化所有级别的金额为0
         for level in level_list:
             level_funding[level['value']] = 0
-        
+
         # 统计每个级别的资助金额
         for project in self.projects_data:
             level = project['level']

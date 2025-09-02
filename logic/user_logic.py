@@ -6,8 +6,8 @@
 """
 from typing import List, Optional
 
-from models.user import User, UserCreate, UserUpdate
 from data.user_dao import UserDAO
+from models.user import User, UserCreate, UserUpdate
 from utils.decorators import log_operation, validate_model_data
 
 
@@ -31,7 +31,7 @@ class UserLogic:
         # 检查用户名是否已存在
         if UserDAO.is_username_exists(user_data.username):
             raise ValueError(f"用户名 '{user_data.username}' 已存在")
-            
+
         user_id = UserDAO.create_user(user_data)
         return user_id is not None
 
@@ -47,7 +47,7 @@ class UserLogic:
         """
         if not username or not password:
             raise ValueError("用户名和密码不能为空")
-            
+
         return UserDAO.authenticate_user(username, password)
 
     @log_operation("更新用户")
@@ -65,7 +65,7 @@ class UserLogic:
         existing_user = UserDAO.get_user_by_id(user_id)
         if not existing_user:
             raise ValueError(f"用户ID {user_id} 不存在")
-            
+
         return UserDAO.update_user(user_id, user_data)
 
     @log_operation("删除用户")
@@ -85,14 +85,14 @@ class UserLogic:
         from utils.session import SessionManager
         if not SessionManager.is_admin():
             raise PermissionError("只有管理员才能删除用户")
-            
+
         # 不能删除最后一个管理员
         user = UserDAO.get_user_by_id(user_id)
         if user and user.role == "admin":
             admin_count = len([u for u in UserDAO.get_all_users() if u.role == "admin"])
             if admin_count <= 1:
                 raise ValueError("不能删除最后一个管理员用户")
-                
+
         return UserDAO.delete_user(user_id)
 
     def get_all_users(self) -> List[User]:
@@ -153,15 +153,15 @@ class UserLogic:
         user = UserDAO.get_user_by_id(user_id)
         if not user:
             raise ValueError("用户不存在")
-            
+
         # 验证旧密码
         auth_user = UserDAO.authenticate_user(user.username, old_password)
         if not auth_user:
             raise ValueError("旧密码错误")
-            
+
         if len(new_password) < 6:
             raise ValueError("新密码长度不能少于6位")
-            
+
         return UserDAO.update_user(user_id, UserUpdate(password=new_password))
 
     def reset_password(self, user_id: int, new_password: str) -> bool:
@@ -176,5 +176,5 @@ class UserLogic:
         """
         if len(new_password) < 6:
             raise ValueError("新密码长度不能少于6位")
-            
+
         return UserDAO.update_user(user_id, UserUpdate(password=new_password))

@@ -152,7 +152,7 @@ class ProjectResultAttachmentLogic:
         from utils.session import SessionManager
         if not SessionManager.is_admin():
             raise PermissionError("只有管理员才能删除项目成果附件")
-            
+
         attachment = self.dao.get_by_id(attachment_id)
         if not attachment:
             return False
@@ -192,7 +192,7 @@ class ProjectResultAttachmentLogic:
         from utils.session import SessionManager
         if not SessionManager.is_admin():
             raise PermissionError("只有管理员才能删除项目成果附件")
-            
+
         attachments = self.dao.get_by_project_result_id(project_result_id)
 
         # 删除数据库记录

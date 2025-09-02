@@ -14,12 +14,12 @@ from pydantic import BaseModel, Field
 class UserRole(str, Enum):
     """用户角色枚举"""
     ADMIN = "admin"  # 管理员
-    USER = "user"    # 普通用户
+    USER = "user"  # 普通用户
 
 
 class UserStatus(str, Enum):
     """用户状态枚举"""
-    ACTIVE = "active"    # 激活
+    ACTIVE = "active"  # 激活
     INACTIVE = "inactive"  # 禁用
 
 

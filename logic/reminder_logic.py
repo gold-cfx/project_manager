@@ -123,7 +123,7 @@ class ReminderLogic:
         from utils.session import SessionManager
         if not SessionManager.is_admin():
             raise PermissionError("只有管理员才能删除提醒")
-            
+
         return self.reminder_dao.delete(reminder_id)
 
     def get_reminder_by_id(self, reminder_id: int) -> Optional[Reminder]:
