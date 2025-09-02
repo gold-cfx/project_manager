@@ -4,26 +4,29 @@
 """
 科研项目管理系统 - 主窗口
 """
+import os
+
 from PyQt5.QtCore import Qt, QSize, pyqtSignal
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, 
-    QListWidgetItem, QFrame, QStatusBar, QToolBar, QMessageBox, QAction
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget,
+    QListWidgetItem, QFrame, QStatusBar, QToolBar, QMessageBox, QAction,
+    QSystemTrayIcon, QMenu, QApplication
 )
 
+from config.settings import ICON_PATH
+from models.user import User
+from .data_dict_management import DataDictManagement
 from .help_document import HelpDocument
 from .project_query import ProjectQuery
 from .project_registration import ProjectRegistration
 from .reminder_management import ReminderManagement
 from .system_settings import SystemSettings
-from .user_management import UserManagementWidget
-from .data_dict_management import DataDictManagement
-from models.user import User
 
 
 class MainWindow(QMainWindow):
     login_success = pyqtSignal(User)
-    
+
     def __init__(self, current_user):
         super().__init__()
         self.current_user = current_user
@@ -53,6 +56,9 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage('就绪')
 
+        # 创建系统托盘图标
+        self.create_system_tray()
+
         # 初始显示项目登记界面
         self.show_project_registration()
 
@@ -73,7 +79,8 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
 
         # 添加用户信息
-        user_label = QLabel(f'当前用户: {self.current_user.real_name} ({"管理员" if self.current_user.role == "admin" else "用户"})')
+        user_label = QLabel(
+            f'当前用户: {self.current_user.real_name} ({"管理员" if self.current_user.role == "admin" else "用户"})')
         toolbar.addWidget(user_label)
 
     def create_sidebar(self):
@@ -94,11 +101,11 @@ class MainWindow(QMainWindow):
         self.add_menu_item('项目查询', 'project_query')
         self.add_menu_item('提醒管理', 'reminder_management')
         self.add_menu_item('系统设置', 'system_settings')
-        
+
         # 管理员专用菜单项
         if self.current_user.role == "admin":
             self.add_menu_item('字典管理', 'data_dict_management')
-            
+
         self.add_menu_item('帮助文档', 'help_doc')
 
         # 连接菜单点击信号
@@ -181,14 +188,12 @@ class MainWindow(QMainWindow):
         if self.current_user.role != "admin":
             QMessageBox.warning(self, '权限不足', '只有管理员才能访问字典管理功能')
             return
-            
+
         self.clear_content_area()
         self.data_dict_management = DataDictManagement()
         self.content_layout.addWidget(self.data_dict_management)
         self.data_dict_management.show()
         self.status_bar.showMessage('字典管理')
-
-
 
     def on_menu_clicked(self, item):
         # 处理菜单点击事件
@@ -205,3 +210,75 @@ class MainWindow(QMainWindow):
             self.show_data_dict_management()
         elif data == 'help_doc':
             self.show_help_document()
+
+    def create_system_tray(self):
+        """创建系统托盘图标"""
+        # 检查系统是否支持系统托盘
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            return
+
+        # 创建系统托盘图标
+        self.tray_icon = QSystemTrayIcon(self)
+
+        # 设置图标路径 - 使用统一的图标文件
+        if os.path.exists(ICON_PATH):
+            tray_icon = QIcon(ICON_PATH)
+            print(f"user icon: {ICON_PATH}")
+        else:
+            tray_icon = self.style().standardIcon(self.style().SP_ComputerIcon)
+
+        # 统一设置所有图标
+        self.tray_icon.setIcon(tray_icon)
+        self.setWindowIcon(tray_icon)  # 设置窗口图标（任务栏图标）
+
+        # 创建托盘菜单
+        tray_menu = QMenu()
+
+        # 添加菜单项
+        show_action = QAction("显示主窗口", self)
+        show_action.triggered.connect(self.show_normal)
+        tray_menu.addAction(show_action)
+
+        tray_menu.addSeparator()
+
+        quit_action = QAction("退出", self)
+        quit_action.triggered.connect(QApplication.quit)
+        tray_menu.addAction(quit_action)
+
+        # 设置菜单
+        self.tray_icon.setContextMenu(tray_menu)
+
+        # 双击图标显示主窗口
+        self.tray_icon.activated.connect(self.tray_icon_activated)
+
+        # 显示托盘图标
+        self.tray_icon.show()
+
+        # 设置提示信息
+        self.tray_icon.setToolTip("科研项目管理系统")
+
+    def tray_icon_activated(self, reason):
+        """处理托盘图标激活事件"""
+        if reason == QSystemTrayIcon.DoubleClick:
+            self.show_normal()
+
+    def show_normal(self):
+        """显示主窗口"""
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
+    def closeEvent(self, event):
+        """重写关闭事件，最小化到系统托盘"""
+        if hasattr(self, 'tray_icon') and self.tray_icon.isVisible():
+            # 隐藏窗口而不是退出
+            self.hide()
+            self.tray_icon.showMessage(
+                "科研项目管理系统",
+                "程序已最小化到系统托盘，双击图标可恢复显示",
+                QSystemTrayIcon.Information,
+                2000
+            )
+            event.ignore()
+        else:
+            event.accept()

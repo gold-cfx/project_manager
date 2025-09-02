@@ -48,3 +48,4 @@ FILE_SERVER_CONFIG = {
     "remote_port": 5001
 }
 FILE_SERVER_CONFIG.update({k: v for k, v in config['file_server'].items() if not (v is None or v == "")})
+ICON_PATH = "icon/icon.svg"

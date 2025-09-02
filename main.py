@@ -1,10 +1,12 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*
 """
 科研项目管理系统 - 主程序入口
 """
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 
+from config.settings import ICON_PATH
 from data.db_connection import init_database
 
 # 初始化数据库
@@ -18,6 +20,10 @@ from file_server.start_server import start_file_server
 from logic.auto_reminder import auto_reminder
 from ui.login_dialog import LoginDialog
 from ui.main_window import MainWindow
+import ctypes
+
+# 解决任务栏图标不显示问题
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("ccp")
 
 matplotlib.use('Qt5Agg')
 plt_font = {'family': 'SimHei', 'size': 10}
@@ -42,6 +48,10 @@ def main():
     app = QApplication(sys.argv)
     app.setAttribute(Qt.AA_EnableHighDpiScaling)  # 启用高DPI缩放
     app.setAttribute(Qt.AA_UseHighDpiPixmaps)  # 启用高DPI图标
+
+    # 设置应用程序图标（任务栏图标）
+    if os.path.exists(ICON_PATH):
+        app.setWindowIcon(QIcon(ICON_PATH))
 
     # 加载样式表
     with open('ui/styles.qss', 'r', encoding='utf-8') as f:

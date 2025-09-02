@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景圆形 -->
+  <circle cx="128" cy="128" r="120" fill="#3498db" stroke="#2980b9" stroke-width="4"/>
+  
+  <!-- 文档图标 -->
+  <rect x="58" y="53" width="140" height="150" fill="white" rx="8" ry="8"/>
+  
+  <!-- 文档折角 -->
+  <polygon points="160,70 176,70 176,86" fill="#2980b9"/>
+  
+  <!-- 图表符号 -->
+  <g fill="#3498db">
+    <rect x="92" y="120" width="12" height="40" rx="2"/>
+    <rect x="122" y="100" width="12" height="60" rx="2"/>
+    <rect x="152" y="90" width="12" height="70" rx="2"/>
+  </g>
+  
+  <!-- R字母 -->
+  <text x="128" y="185" font-family="Arial, sans-serif" font-size="20"
+        font-weight="bold" text-anchor="middle" fill="#2980b9">CCP</text>
+</svg>
