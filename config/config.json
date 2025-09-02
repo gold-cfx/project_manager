@@ -13,6 +13,5 @@
     "remote_host": "192.168.103.89",
     "remote_port": 50031,
     "root_dir": "C:/Users/USER/Pictures"
-  },
-  "upload_dir": "C:/Users/USER/Pictures"
+  }
 }

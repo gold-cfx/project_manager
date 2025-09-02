@@ -27,7 +27,7 @@ class LoginDialog(QDialog):
     def init_ui(self):
         """初始化UI"""
         self.setWindowTitle('科研项目管理系统 - 登录')
-        self.setFixedSize(500, 300)
+        self.setFixedSize(500, 320)
         self.setWindowFlags(Qt.WindowCloseButtonHint)
         
         # 主布局
@@ -37,7 +37,7 @@ class LoginDialog(QDialog):
         
         # 标题
         title_label = QLabel('科研项目管理系统')
-        title_label.setFont(QFont('Microsoft YaHei', 11, QFont.Bold))
+        title_label.setFont(QFont('Microsoft YaHei', 24, QFont.Bold))
         title_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(title_label)
         #
@@ -78,6 +78,7 @@ class LoginDialog(QDialog):
         
         # 按钮
         button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(0, 20, 0, 0)
         self.login_button = QPushButton('登录')
         self.login_button.setFont(QFont('Microsoft YaHei', 11))
         self.login_button.setMinimumHeight(40)

@@ -197,7 +197,6 @@ class SystemSettings(QWidget):
             'root_dir': self.file_server_dir_edit.text()
         }
         settings_config["file_server"] = file_server_config
-        settings_config["upload_dir"] = self.file_server_dir_edit.text()
 
         # 保存到配置文件
         with open(settings.config_path, 'w', encoding='utf-8') as fw:
