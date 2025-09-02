@@ -66,8 +66,8 @@ def main():
         main_window = MainWindow(current_user)
         main_window.show()
 
-        # 检查并显示自动提醒
-        auto_reminder.check_and_show_reminders()
+        # 初始化定时提醒
+        auto_reminder.initialize_timer()
 
         # 运行应用程序
         sys.exit(app.exec_())

@@ -5,7 +5,7 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QFormLayout, QLineEdit, QPushButton,
     QFileDialog, QGroupBox, QHBoxLayout, QTabWidget,
-    QRadioButton, QLabel
+    QRadioButton, QLabel, QSpinBox
 )
 
 from config import settings
@@ -24,18 +24,18 @@ class SystemSettings(QWidget):
 
         # 创建标签页
         self.tab_widget = QTabWidget()
-        
+
         # 系统配置标签页
         self.system_config_widget = QWidget()
         self.init_system_config_tab()
         self.tab_widget.addTab(self.system_config_widget, "系统配置")
-        
+
         # 用户管理标签页（仅管理员可见）
         if self.current_user and self.current_user.role == "admin":
             from .user_management import UserManagementWidget
             self.user_management_widget = UserManagementWidget(self.current_user)
             self.tab_widget.addTab(self.user_management_widget, "用户管理")
-        
+
         main_layout.addWidget(self.tab_widget)
 
     def init_system_config_tab(self):
@@ -108,6 +108,19 @@ class SystemSettings(QWidget):
         file_server_group.setLayout(file_server_layout)
         config_layout.addWidget(file_server_group)
 
+        reminder_group = QGroupBox('提醒配置')
+        reminder_layout = QFormLayout()
+
+        self.reminder_interval_spinbox = QSpinBox()
+        self.reminder_interval_spinbox.setRange(1, 24)  # 1-24小时
+        self.reminder_interval_spinbox.setSuffix(' 小时')
+        self.reminder_interval_spinbox.setValue(1)  # 默认1小时
+
+        reminder_layout.addRow('提醒检查间隔', self.reminder_interval_spinbox)
+
+        reminder_group.setLayout(reminder_layout)
+        config_layout.addWidget(reminder_group)
+
         # 保存按钮
         self.save_button = QPushButton('保存配置')
         self.save_button.clicked.connect(self.save_config)
@@ -175,6 +188,17 @@ class SystemSettings(QWidget):
         root_dir = settings.FILE_SERVER_CONFIG.get('root_dir', '')
         self.file_server_dir_edit.setText(root_dir)
 
+        # 提醒配置
+        self.load_reminder_config()
+
+    def load_reminder_config(self):
+        """加载提醒配置"""
+        try:
+            from logic.auto_reminder import auto_reminder
+            self.reminder_interval_spinbox.setValue(auto_reminder.reminder_interval_hours)
+        except Exception as e:
+            print(f"加载提醒配置时发生错误: {e}")
+
     def save_config(self):
         settings_config = {}
         # 保存数据库配置
@@ -198,10 +222,18 @@ class SystemSettings(QWidget):
         }
         settings_config["file_server"] = file_server_config
 
+        # 保存提醒配置
+        try:
+            from logic.auto_reminder import auto_reminder
+            interval = self.reminder_interval_spinbox.value()
+            auto_reminder.update_interval(interval)
+        except Exception as e:
+            print(f"保存提醒配置时发生错误: {e}")
+
         # 保存到配置文件
         with open(settings.config_path, 'w', encoding='utf-8') as fw:
             json.dump(settings_config, fw, ensure_ascii=False, indent=2)
 
-        # 提示用户配置已保存并需要重启
+        # 提示用户配置已保存
         from PyQt5.QtWidgets import QMessageBox
-        QMessageBox.information(self, '配置保存成功', '文件服务器配置已保存，请重启应用程序使配置生效！')
+        QMessageBox.information(self, '配置保存成功', '配置已保存！提醒配置立即生效，文件服务器配置需重启应用程序生效。')

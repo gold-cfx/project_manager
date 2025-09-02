@@ -3,20 +3,91 @@
 科研项目管理系统 - 自动提醒功能
 """
 import datetime
+import json
+import os
 from typing import List
 
+from PyQt5.QtCore import QObject, pyqtSignal, QTimer
 from PyQt5.QtWidgets import QMessageBox
 
 from logic.reminder_logic import ReminderLogic
 from models.reminder import Reminder
 
 
-class AutoReminder:
+class AutoReminder(QObject):
     """自动提醒类，负责在系统启动时检查并显示需要提醒的项目"""
+    reminder_triggered = pyqtSignal(str, str, str)
 
     def __init__(self):
         """初始化自动提醒类"""
+        super().__init__()
         self.reminder_logic = ReminderLogic()
+        self.timer = None
+        self.reminder_interval_hours = 1
+        
+        # 加载定时任务配置
+        self.load_timer_config()
+        
+    def initialize_timer(self):
+        """初始化定时器（在QApplication创建后调用）"""
+        if self.timer is None:
+            self.timer = QTimer()
+            self.timer.timeout.connect(self.check_and_show_reminders)
+            
+            # 启动时立即检查一次
+            self.check_and_show_reminders()
+            
+            # 启动定时器
+            self.start_timer()
+
+    def load_timer_config(self):
+        """加载定时任务配置"""
+        try:
+            config_dir = os.path.join(os.path.dirname(__file__), '..', 'config')
+            os.makedirs(config_dir, exist_ok=True)
+            config_path = os.path.join(config_dir, 'reminder_config.json')
+            if os.path.exists(config_path):
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                    self.reminder_interval_hours = config.get('reminder_interval_hours', 1)
+            else:
+                # 默认每小时检查一次
+                self.reminder_interval_hours = 1
+                self.save_timer_config()
+        except Exception as e:
+            print(f"加载提醒配置时发生错误: {e}")
+            self.reminder_interval_hours = 1
+
+    def save_timer_config(self):
+        """保存定时任务配置"""
+        try:
+            config_dir = os.path.join(os.path.dirname(__file__), '..', 'config')
+            os.makedirs(config_dir, exist_ok=True)
+            config_path = os.path.join(config_dir, 'reminder_config.json')
+            config = {
+                'reminder_interval_hours': self.reminder_interval_hours
+            }
+            with open(config_path, 'w', encoding='utf-8') as f:
+                json.dump(config, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"保存提醒配置时发生错误: {e}")
+
+    def start_timer(self):
+        """启动定时器"""
+        interval_ms = self.reminder_interval_hours * 60 * 60 * 1000  # 转换为毫秒
+        self.timer.start(interval_ms)
+        print(f"定时提醒已启动，每{self.reminder_interval_hours}小时检查一次")
+
+    def stop_timer(self):
+        """停止定时器"""
+        self.timer.stop()
+
+    def update_interval(self, hours):
+        """更新检查间隔"""
+        self.reminder_interval_hours = hours
+        self.save_timer_config()
+        self.stop_timer()
+        self.start_timer()
 
     def check_and_show_reminders(self) -> None:
         """检查需要提醒的项目并显示提醒对话框
