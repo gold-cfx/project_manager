@@ -3,14 +3,17 @@
 """
 科研项目管理系统 - 主程序入口
 """
+from PyQt5.QtCore import Qt
+
+from data.db_connection import init_database
+
+# 初始化数据库
+init_database()
 import os
 import sys
 
-# 设置中文字体支持
 import matplotlib
 from PyQt5.QtWidgets import QApplication
-
-from data.db_connection import init_database
 from file_server.start_server import start_file_server
 from logic.auto_reminder import auto_reminder
 from ui.login_dialog import LoginDialog
@@ -25,9 +28,6 @@ os.environ['QT_FONT_DPI'] = '96'
 
 
 def main():
-    # 初始化数据库
-    init_database()
-    
     # 初始化数据字典
     from init_data_dict import initialize_data_dict
     initialize_data_dict()
@@ -40,6 +40,8 @@ def main():
 
     # 创建应用程序
     app = QApplication(sys.argv)
+    app.setAttribute(Qt.AA_EnableHighDpiScaling)  # 启用高DPI缩放
+    app.setAttribute(Qt.AA_UseHighDpiPixmaps)  # 启用高DPI图标
 
     # 加载样式表
     with open('ui/styles.qss', 'r', encoding='utf-8') as f:
@@ -49,7 +51,7 @@ def main():
     login_dialog = LoginDialog()
     if login_dialog.exec_() == LoginDialog.Accepted:
         current_user = login_dialog.get_current_user()
-        
+
         # 创建主窗口
         main_window = MainWindow(current_user)
         main_window.show()

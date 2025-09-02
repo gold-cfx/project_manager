@@ -36,11 +36,6 @@ class ExcelTemplateGenerator:
         '项目开始时间',
         '项目结束时间',
     ]
-    PROJECT_SOURCES = dict_utils.get_type_values(dict_utils.get_project_sources())
-    PROJECT_TYPES = dict_utils.get_type_values(dict_utils.get_project_types())
-    RESULT_TYPES = dict_utils.get_type_values(dict_utils.get_result_types())
-    PROJECT_LEVELS = dict_utils.get_type_values(dict_utils.get_project_levels())
-    PROJECT_STATUS = dict_utils.get_type_values(dict_utils.get_project_status())
 
     @classmethod
     def generate_project_template(cls, file_path: str) -> bool:
@@ -69,27 +64,32 @@ class ExcelTemplateGenerator:
 
             # 添加数据验证
             # 项目来源验证
-            source_validation = DataValidation(type="list", formula1=f'"{",".join(cls.PROJECT_SOURCES)}"')
+            PROJECT_SOURCES = dict_utils.get_type_values(dict_utils.get_project_sources())
+            source_validation = DataValidation(type="list", formula1=f'"{",".join(PROJECT_SOURCES)}"')
             source_validation.add(f'E2:E1000')
             ws.add_data_validation(source_validation)
 
             # 项目类型验证
-            type_validation = DataValidation(type="list", formula1=f'"{",".join(cls.PROJECT_TYPES)}"')
+            PROJECT_TYPES = dict_utils.get_type_values(dict_utils.get_project_types())
+            type_validation = DataValidation(type="list", formula1=f'"{",".join(PROJECT_TYPES)}"')
             type_validation.add(f'F2:F1000')
             ws.add_data_validation(type_validation)
 
             # 项目级别验证
+            PROJECT_LEVELS = dict_utils.get_type_values(dict_utils.get_project_levels())
+
             level_validation = DataValidation(
                 type="list",
-                formula1=f'"{",".join(cls.PROJECT_LEVELS)}"'
+                formula1=f'"{",".join(PROJECT_LEVELS)}"'
             )
             level_validation.add(f'G2:G1000')
             ws.add_data_validation(level_validation)
 
             # 项目状态验证
+            PROJECT_STATUS = dict_utils.get_type_values(dict_utils.get_project_status())
             status_validation = DataValidation(
                 type="list",
-                formula1=f'"{",".join(cls.PROJECT_STATUS)}"'
+                formula1=f'"{",".join(PROJECT_STATUS)}"'
             )
             status_validation.add(f'L2:L1000')
             ws.add_data_validation(status_validation)

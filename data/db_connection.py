@@ -37,7 +37,7 @@ class DatabaseConnection:
                     host=self.config['host'],
                     user=self.config['user'],
                     password=self.config['password'],
-                    db=self.config['db'],
+                    db=self.config['db_name'],
                     charset=self.config['charset'],
                     cursorclass=DictCursor
                 )
@@ -244,7 +244,7 @@ def init_database():
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 title VARCHAR(100) NOT NULL,
                 content TEXT NOT NULL,
-                category VARCHAR(50) NOT NULL DEFAULT '通用',
+                version VARCHAR(20) NOT NULL,
                 create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )

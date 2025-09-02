@@ -23,7 +23,7 @@ DB_CONFIG = {
     'host': '127.0.0.1',  # 数据库主机
     'user': 'root',  # 数据库用户名
     'password': '',  # 数据库密码（请修改为实际密码）
-    'db': 'research_project',  # 数据库名
+    'db_name': 'office',  # 数据库名
     'charset': 'utf8mb4'  # 字符集
 }
 DB_CONFIG.update({k: v for k, v in config['database'].items() if not (v is None or v == "")})

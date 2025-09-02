@@ -156,7 +156,7 @@ class DataDictManagement(QWidget):
 
         # 数据表格
         self.table = QTableWidget()
-        self.table.setColumnCount(8)
+        self.table.setColumnCount(7)
         self.table.setHorizontalHeaderLabels([
             "ID", "类型", "键", "值", "排序", "启用", "描述"
         ])
@@ -166,9 +166,9 @@ class DataDictManagement(QWidget):
         header.setSectionResizeMode(QHeaderView.Interactive)
         header.setStretchLastSection(True)
         self.table.setColumnWidth(0, 50)  # ID
-        self.table.setColumnWidth(1, 100)  # 类型
-        self.table.setColumnWidth(2, 100)  # 键
-        self.table.setColumnWidth(3, 100)  # 值
+        self.table.setColumnWidth(1, 150)  # 类型
+        self.table.setColumnWidth(2, 200)  # 键
+        self.table.setColumnWidth(3, 200)  # 值
         self.table.setColumnWidth(4, 50)  # 排序
         self.table.setColumnWidth(5, 50)  # 启用
 

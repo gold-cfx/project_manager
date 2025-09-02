@@ -51,7 +51,7 @@ class HelpDocDAO:
     @with_db_connection()
     def get_latest(self, cursor: DictCursor) -> Optional[HelpDoc]:
         """获取最新的帮助文档"""
-        sql = f"SELECT * FROM {self.table_name} ORDER BY updated_at DESC LIMIT 1"
+        sql = f"SELECT * FROM {self.table_name} ORDER BY update_time DESC LIMIT 1"
         cursor.execute(sql)
         result = cursor.fetchone()
         if result is not None:
