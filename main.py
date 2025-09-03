@@ -6,7 +6,7 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
-from config.settings import ICON_PATH
+from config.settings import ICON_PATH, QSS_PATH
 from data.db_connection import init_database
 
 # 初始化数据库
@@ -54,7 +54,7 @@ def main():
         app.setWindowIcon(QIcon(ICON_PATH))
 
     # 加载样式表
-    with open('ui/styles.qss', 'r', encoding='utf-8') as f:
+    with open(QSS_PATH, 'r', encoding='utf-8') as f:
         app.setStyleSheet(f.read())
 
     # 显示登录对话框

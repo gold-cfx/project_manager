@@ -9,10 +9,11 @@ import socket
 # 确保datetime模块被导入
 from datetime import datetime
 
+from utils.resource_path import get_config_path, get_icon_path
+
 pod_ip = socket.gethostbyname(socket.gethostname())
 
-config_dir = os.path.dirname(__file__)
-root_dir = os.path.dirname(config_dir)
+config_dir = get_config_path()
 config_path = os.path.join(config_dir, 'config.json')
 
 default_db_name = 'research_project'
@@ -37,7 +38,7 @@ SYSTEM_CONFIG = {
     'default_reminder_days': 30,  # 默认提前提醒天数
     'max_project_duration': 10,  # 最大项目持续时间（年）
 }
-DEFAULT_ROOT_DIR = "C:\\Farmar\\code\\office-v3\\attachments"
+DEFAULT_ROOT_DIR = "C:\\research_project\\attachments"
 FILE_SERVER_CONFIG = {
     "enabled": True,
     "host": "127.0.0.1",
@@ -48,4 +49,6 @@ FILE_SERVER_CONFIG = {
     "remote_port": 5001
 }
 FILE_SERVER_CONFIG.update({k: v for k, v in config['file_server'].items() if not (v is None or v == "")})
-ICON_PATH = "icon/icon.svg"
+ICON_PATH = os.path.join(get_icon_path(), "icon.svg")
+QSS_PATH = os.path.join(get_icon_path(), "styles.qss")
+

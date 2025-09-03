@@ -9,9 +9,9 @@
     "enabled": true,
     "remote_server": false,
     "host": "0.0.0.0",
-    "port": 5003,
+    "port": 5008,
     "remote_host": "192.168.103.89",
-    "remote_port": 50031,
-    "root_dir": "C:/Users/USER/Pictures"
+    "remote_port": 5008,
+    "root_dir": "C:\\research_project\\attachments"
   }
 }

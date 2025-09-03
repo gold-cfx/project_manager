@@ -5,9 +5,9 @@
 修改密码对话框
 """
 
-from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
-                           QLineEdit, QPushButton, QMessageBox, QFormLayout)
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
+                             QLineEdit, QPushButton, QMessageBox, QFormLayout)
+
 from data.user_dao import UserDAO
 
 
