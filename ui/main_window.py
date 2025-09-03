@@ -11,7 +11,7 @@ from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget,
     QListWidgetItem, QFrame, QStatusBar, QToolBar, QMessageBox, QAction,
-    QSystemTrayIcon, QMenu, QApplication
+    QSystemTrayIcon, QMenu, QApplication, QDialog
 )
 
 from config.settings import ICON_PATH
@@ -83,6 +83,14 @@ class MainWindow(QMainWindow):
         user_label = QLabel(
             f'当前用户: {self.current_user.real_name} ({"管理员" if self.current_user.role == "admin" else "用户"})')
         toolbar.addWidget(user_label)
+
+        # 添加分隔符
+        toolbar.addSeparator()
+
+        # 添加修改密码按钮
+        change_password_action = QAction('修改密码', self)
+        change_password_action.triggered.connect(self.show_change_password_dialog)
+        toolbar.addAction(change_password_action)
 
     def create_sidebar(self):
         # 创建侧边栏框架
@@ -204,11 +212,19 @@ class MainWindow(QMainWindow):
             return
 
         self.clear_content_area()
-
         self.user_management = UserManagementWidget(self.current_user)
         self.content_layout.addWidget(self.user_management)
         self.user_management.show()
         self.status_bar.showMessage('用户管理')
+
+    def show_change_password_dialog(self):
+        """显示修改密码对话框"""
+        from .change_password_dialog import ChangePasswordDialog
+
+        dialog = ChangePasswordDialog(self.current_user, self)
+        if dialog.exec_() == QDialog.Accepted:
+            # 密码修改成功后的处理
+            self.status_bar.showMessage('密码修改成功', 3000)
 
     def on_menu_clicked(self, item):
         # 处理菜单点击事件
@@ -297,6 +313,7 @@ class MainWindow(QMainWindow):
                 2000
             )
             event.ignore()
+            # event.accept()
         else:
             event.accept()
 

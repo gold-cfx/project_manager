@@ -291,3 +291,48 @@ class UserDAO:
         cursor.execute(sql, (username,))
         row = cursor.fetchone()
         return row['count'] > 0
+
+    @staticmethod
+    @with_db_connection()
+    def verify_password(username: str, password: str, cursor: DictCursor) -> bool:
+        """验证用户密码是否正确
+        
+        Args:
+            username: 用户名
+            password: 密码
+            cursor: 数据库游标
+            
+        Returns:
+            bool: 密码是否正确
+        """
+        hashed_password = hashlib.sha256(password.encode()).hexdigest()
+        sql = "SELECT password FROM users WHERE username = %s"
+        cursor.execute(sql, (username,))
+        row = cursor.fetchone()
+        
+        if not row:
+            return False
+            
+        return row['password'] == hashed_password
+
+    @staticmethod
+    @with_db_connection(cursor_type=Cursor)
+    def change_password(username: str, new_password: str, cursor: Cursor) -> bool:
+        """修改用户密码
+        
+        Args:
+            username: 用户名
+            new_password: 新密码
+            cursor: 数据库游标
+            
+        Returns:
+            bool: 修改是否成功
+        """
+        hashed_password = hashlib.sha256(new_password.encode()).hexdigest()
+        sql = "UPDATE users SET password = %s, update_time = NOW() WHERE username = %s"
+        try:
+            cursor.execute(sql, (hashed_password, username))
+            return cursor.rowcount > 0
+        except Exception as e:
+            print(f"修改密码失败: {e}")
+            return False
