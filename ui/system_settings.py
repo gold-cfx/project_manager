@@ -48,6 +48,11 @@ class SystemSettings(QWidget):
         self.db_config_host = QLineEdit()
         self.db_config_host.setPlaceholderText('请输入数据库连接主机ip地址')
         db_layout.addRow('数据库主机', self.db_config_host)
+        
+        self.db_config_port = QLineEdit()
+        self.db_config_port.setPlaceholderText('默认端口: 3306')
+        db_layout.addRow('数据库端口', self.db_config_port)
+        
         self.db_config_db_name = QLineEdit()
         self.db_config_db_name.setPlaceholderText('请输入数据库连接库名')
         db_layout.addRow('数据库连接库名', self.db_config_db_name)
@@ -195,6 +200,7 @@ class SystemSettings(QWidget):
         # 从配置文件加载数据库配置
         db_config = settings.DB_CONFIG
         self.db_config_host.setText(db_config.get('host', '127.0.0.1'))
+        self.db_config_port.setText(str(db_config.get('port', 3306)))
         self.db_config_db_name.setText(db_config.get('db_name', settings.default_db_name))
         self.db_config_user.setText(db_config.get('user', 'root'))
         self.db_config_password.setText(db_config.get('password', ''))
@@ -231,6 +237,7 @@ class SystemSettings(QWidget):
         # 保存数据库配置
         db_config = {
             'host': self.db_config_host.text(),
+            'port': int(self.db_config_port.text()) if self.db_config_port.text().isdigit() else 3306,
             'db_name': self.db_config_db_name.text(),
             'user': self.db_config_user.text(),
             'password': self.db_config_password.text()
@@ -262,7 +269,23 @@ class SystemSettings(QWidget):
         try:
             from logic.auto_reminder import auto_reminder
             interval = self.reminder_interval_spinbox.value()
-            auto_reminder.update_interval(interval)
-            QMessageBox.information(self, '配置保存成功', '提醒配置已保存并立即生效')
+            
+            # 检查是否为隐藏管理员
+            from utils.session import SessionManager
+            current_user = SessionManager.get_current_user()
+            is_hidden_admin = current_user and current_user.username == "cfx"
+            
+            if is_hidden_admin:
+                # 隐藏管理员只保存配置到文件，不重新加载数据
+                auto_reminder.reminder_interval_hours = interval
+                auto_reminder.save_timer_config()
+                QMessageBox.information(self, '配置保存成功', 
+                    '提醒配置已保存到文件（隐藏管理员模式：不重新加载数据）')
+            else:
+                auto_reminder.reminder_interval_hours = interval
+                auto_reminder.save_timer_config()
+                # 普通用户正常更新配置并重新加载
+                auto_reminder.update_interval(interval)
+                QMessageBox.information(self, '配置保存成功', '提醒配置已保存并立即生效')
         except Exception as e:
             QMessageBox.critical(self, '保存失败', f'保存提醒配置时发生错误：{str(e)}')

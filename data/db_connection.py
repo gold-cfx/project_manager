@@ -35,13 +35,14 @@ class DatabaseConnection:
             try:
                 self._connection = pymysql.connect(
                     host=self.config['host'],
+                    port=self.config.get('port', 3306),
                     user=self.config['user'],
                     password=self.config['password'],
                     db=self.config['db_name'],
                     charset=self.config['charset'],
                     cursorclass=DictCursor
                 )
-                print("数据库连接成功")
+                print(f"数据库连接成功: {self.config['host']}:{self.config.get('port', 3306)}")
             except Exception as e:
                 print(f"数据库连接失败: {e}")
                 self._connection = None

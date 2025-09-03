@@ -238,7 +238,7 @@ class UserDAO:
         """
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
-        # 首先检查用户是否存在
+        # 检查用户是否存在
         sql = """
             SELECT id, username, password, real_name, role, status, 
                    email, phone, last_login, create_time, update_time

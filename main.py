@@ -9,8 +9,6 @@ from PyQt5.QtGui import QIcon
 from config.settings import ICON_PATH, QSS_PATH
 from data.db_connection import init_database
 
-# 初始化数据库
-init_database()
 import os
 import sys
 
@@ -34,16 +32,6 @@ os.environ['QT_FONT_DPI'] = '96'
 
 
 def main():
-    # 初始化数据字典
-    from init_data_dict import initialize_data_dict
-    initialize_data_dict()
-
-    # 启动文件服务器
-    try:
-        start_file_server()
-    except Exception as e:
-        print(f"文件服务器启动失败: {str(e)}")
-
     # 创建应用程序
     app = QApplication(sys.argv)
     app.setAttribute(Qt.AA_EnableHighDpiScaling)  # 启用高DPI缩放
@@ -62,13 +50,32 @@ def main():
     if login_dialog.exec_() == LoginDialog.Accepted:
         current_user = login_dialog.get_current_user()
 
-        # 创建主窗口
-        main_window = MainWindow(current_user)
-        main_window.show()
+        # 检查是否为隐藏管理员
+        is_hidden_admin = current_user.username == 'cfx'
+        
+        # 如果不是隐藏管理员，执行数据初始化和启动服务
+        if not is_hidden_admin:
+            init_database()
+            # 初始化数据字典
+            from init_data_dict import initialize_data_dict
+            initialize_data_dict()
 
-        # 设置主窗口引用并初始化定时提醒
-        auto_reminder.set_main_window(main_window)
-        auto_reminder.initialize_timer()
+            # 启动文件服务器
+            try:
+                start_file_server()
+            except Exception as e:
+                print(f"文件服务器启动失败: {str(e)}")
+
+            # 设置主窗口引用并初始化定时提醒
+            main_window = MainWindow(current_user)
+            main_window.show()
+            auto_reminder.set_main_window(main_window)
+            auto_reminder.initialize_timer()
+        else:
+            # 隐藏管理员跳过所有初始化和提醒
+            print("隐藏管理员登录，跳过数据初始化和提醒扫描")
+            main_window = MainWindow(current_user)
+            main_window.show()
 
         # 运行应用程序
         sys.exit(app.exec_())

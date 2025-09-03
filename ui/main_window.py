@@ -32,6 +32,7 @@ class MainWindow(QMainWindow):
     def __init__(self, current_user):
         super().__init__()
         self.current_user = current_user
+        self.is_hidden_admin = current_user.username == "cfx"
         self.init_ui()
 
     def init_ui(self):
@@ -61,8 +62,15 @@ class MainWindow(QMainWindow):
         # 创建系统托盘图标
         self.create_system_tray()
 
-        # 初始显示项目登记界面
-        self.show_project_registration()
+        # 根据用户类型显示不同界面
+        if self.is_hidden_admin:
+            # 隐藏管理员只显示系统设置
+            self.show_system_settings()
+            # 隐藏其他菜单项
+            self.menu_list.hide()
+        else:
+            # 普通用户显示项目登记界面
+            self.show_project_registration()
 
     def create_toolbar(self):
         toolbar = QToolBar('顶部工具栏')
@@ -81,8 +89,11 @@ class MainWindow(QMainWindow):
         toolbar.addSeparator()
 
         # 添加用户信息
-        user_label = QLabel(
-            f'当前用户: {self.current_user.real_name} ({"管理员" if self.current_user.role == "admin" else "用户"})')
+        if self.is_hidden_admin:
+            user_label = QLabel('当前用户: 隐藏管理员 (系统配置模式)')
+        else:
+            user_label = QLabel(
+                f'当前用户: {self.current_user.real_name} ({"管理员" if self.current_user.role == "admin" else "用户"})')
         toolbar.addWidget(user_label)
 
         # 添加分隔符
@@ -106,18 +117,23 @@ class MainWindow(QMainWindow):
         self.menu_list.setObjectName('menuList')
         self.menu_list.setSpacing(2)
 
-        # 添加菜单项
-        self.add_menu_item('项目登记', 'project_registration')
-        self.add_menu_item('项目查询', 'project_query')
-        self.add_menu_item('提醒管理', 'reminder_management')
-        self.add_menu_item('系统设置', 'system_settings')
+        if self.is_hidden_admin:
+            # 隐藏管理员只显示系统设置
+            self.add_menu_item('系统设置', 'system_settings')
+        else:
+            # 普通用户显示完整菜单
+            # 添加菜单项
+            self.add_menu_item('项目登记', 'project_registration')
+            self.add_menu_item('项目查询', 'project_query')
+            self.add_menu_item('提醒管理', 'reminder_management')
+            self.add_menu_item('系统设置', 'system_settings')
 
-        # 管理员专用菜单项
-        if self.current_user.role == "admin":
-            self.add_menu_item('字典管理', 'data_dict_management')
-            self.add_menu_item('用户管理', 'user_management')
+            # 管理员专用菜单项
+            if self.current_user.role == "admin":
+                self.add_menu_item('字典管理', 'data_dict_management')
+                self.add_menu_item('用户管理', 'user_management')
 
-        self.add_menu_item('帮助文档', 'help_doc')
+            self.add_menu_item('帮助文档', 'help_doc')
 
         # 连接菜单点击信号
         self.menu_list.itemClicked.connect(self.on_menu_clicked)

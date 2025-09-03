@@ -22,6 +22,7 @@ with open(config_path, 'r') as f:
 # 数据库配置
 DB_CONFIG = {
     'host': '127.0.0.1',  # 数据库主机
+    'port': 3306,  # 数据库端口
     'user': 'root',  # 数据库用户名
     'password': '',  # 数据库密码（请修改为实际密码）
     'db_name': 'office',  # 数据库名
