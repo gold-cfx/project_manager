@@ -3,22 +3,20 @@
 """
 科研项目管理系统 - 主程序入口
 """
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
-
-from config.settings import ICON_PATH, QSS_PATH
-from data.db_connection import init_database
-
+import ctypes
 import os
 import sys
 
 import matplotlib
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication
+
+from config.settings import ICON_PATH, QSS_PATH
 from file_server.start_server import start_file_server
 from logic.auto_reminder import auto_reminder
 from ui.login_dialog import LoginDialog
 from ui.main_window import MainWindow
-import ctypes
 
 # 解决任务栏图标不显示问题
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("ccp")
@@ -52,20 +50,14 @@ def main():
 
         # 检查是否为隐藏管理员
         is_hidden_admin = current_user.username == 'cfx'
-        
+
         # 如果不是隐藏管理员，执行数据初始化和启动服务
         if not is_hidden_admin:
-            init_database()
-            # 初始化数据字典
-            from init_data_dict import initialize_data_dict
-            initialize_data_dict()
-
             # 启动文件服务器
             try:
                 start_file_server()
             except Exception as e:
                 print(f"文件服务器启动失败: {str(e)}")
-
             # 设置主窗口引用并初始化定时提醒
             main_window = MainWindow(current_user)
             main_window.show()

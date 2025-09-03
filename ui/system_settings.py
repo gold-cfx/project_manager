@@ -1,4 +1,3 @@
-import json
 import os
 
 from PyQt5 import QtCore
@@ -48,11 +47,11 @@ class SystemSettings(QWidget):
         self.db_config_host = QLineEdit()
         self.db_config_host.setPlaceholderText('请输入数据库连接主机ip地址')
         db_layout.addRow('数据库主机', self.db_config_host)
-        
+
         self.db_config_port = QLineEdit()
         self.db_config_port.setPlaceholderText('默认端口: 3306')
         db_layout.addRow('数据库端口', self.db_config_port)
-        
+
         self.db_config_db_name = QLineEdit()
         self.db_config_db_name.setPlaceholderText('请输入数据库连接库名')
         db_layout.addRow('数据库连接库名', self.db_config_db_name)
@@ -111,6 +110,20 @@ class SystemSettings(QWidget):
 
         file_server_group.setLayout(file_server_layout)
         config_layout.addWidget(file_server_group)
+
+        # 数据库操作按钮
+        db_button_layout = QHBoxLayout()
+
+        self.test_connection_button = QPushButton('测试连接')
+        self.test_connection_button.clicked.connect(self.test_database_connection)
+        db_button_layout.addWidget(self.test_connection_button)
+
+        self.init_db_button = QPushButton('初始化数据库')
+        self.init_db_button.clicked.connect(self.init_database_tables)
+        self.init_db_button.setToolTip("首次使用时创建数据库表结构")
+        db_button_layout.addWidget(self.init_db_button)
+
+        config_layout.addLayout(db_button_layout)
 
         # 保存按钮
         self.save_button = QPushButton('保存配置')
@@ -224,6 +237,145 @@ class SystemSettings(QWidget):
         root_dir = settings.FILE_SERVER_CONFIG.get('root_dir', '')
         self.file_server_dir_edit.setText(root_dir)
 
+    def test_database_connection(self):
+        """测试数据库连接"""
+        try:
+            from data.db_connection import DatabaseConnection
+            import pymysql
+
+            # 获取当前配置
+            host = self.db_config_host.text().strip()
+            port = int(self.db_config_port.text()) if self.db_config_port.text().strip() else 3306
+            db_name = self.db_config_db_name.text().strip()
+            user = self.db_config_user.text().strip()
+            password = self.db_config_password.text()
+
+            if not all([host, db_name, user]):
+                QMessageBox.warning(self, '配置不完整', '请填写完整的数据库连接信息！')
+                return
+
+            # 使用临时配置测试连接
+            temp_config = {
+                'host': host,
+                'port': port,
+                'db_name': db_name,
+                'user': user,
+                'password': password,
+                'charset': 'utf8mb4'
+            }
+
+            # 创建临时连接实例
+            temp_db = DatabaseConnection()
+            temp_db.config = temp_config
+
+            # 测试连接
+            conn = temp_db.connect()
+            if conn and conn.open:
+                # 检查数据库是否存在
+                cursor = conn.cursor()
+                cursor.execute(f"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{db_name}'")
+                db_exists = cursor.fetchone() is not None
+                cursor.close()
+                temp_db.close()
+
+                if db_exists:
+                    QMessageBox.information(self, '连接成功',
+                                            f'数据库连接成功！\n\n主机: {host}:{port}\n数据库: {db_name}\n状态: 数据库已存在')
+                else:
+                    reply = QMessageBox.question(self, '数据库不存在',
+                                                 f'数据库连接成功，但数据库 "{db_name}" 不存在。\n\n是否初始化数据库？',
+                                                 QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
+                    if reply == QMessageBox.Yes:
+                        self.init_database_tables()
+            else:
+                QMessageBox.critical(self, '连接失败', '数据库连接失败！')
+
+        except pymysql.Error as e:
+            QMessageBox.critical(self, '连接失败', f'数据库连接失败！\n\n错误信息: {str(e)}')
+        except Exception as e:
+            QMessageBox.critical(self, '错误', f'测试连接时发生错误: {str(e)}')
+
+    def init_database_tables(self):
+        """初始化数据库表结构"""
+        try:
+            import pymysql
+            from data.db_connection import init_database
+
+            # 获取当前配置
+            host = self.db_config_host.text().strip()
+            port = int(self.db_config_port.text()) if self.db_config_port.text().strip() else 3306
+            db_name = self.db_config_db_name.text().strip()
+            user = self.db_config_user.text().strip()
+            password = self.db_config_password.text()
+
+            if not all([host, db_name, user]):
+                QMessageBox.warning(self, '配置不完整', '请填写完整的数据库连接信息！')
+                return
+
+            # 临时更新配置以使用新设置
+            from config.settings import DB_CONFIG
+            original_config = DB_CONFIG.copy()
+
+            try:
+                # 更新为当前界面配置
+                DB_CONFIG.update({
+                    'host': host,
+                    'port': port,
+                    'db_name': db_name,
+                    'user': user,
+                    'password': password,
+                    'charset': 'utf8mb4'
+                })
+
+                # 创建数据库（如果不存在）
+                conn = pymysql.connect(
+                    host=host,
+                    port=port,
+                    user=user,
+                    password=password,
+                    charset='utf8mb4'
+                )
+
+                cursor = conn.cursor()
+                cursor.execute(
+                    f"CREATE DATABASE IF NOT EXISTS `{db_name}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+                cursor.close()
+                conn.close()
+
+                # 使用现有的初始化方法
+                init_success = init_database()
+
+                if init_success:
+                    from init_data_dict import initialize_data_dict
+                    success = initialize_data_dict()
+
+                    if success:
+                        QMessageBox.information(self, '初始化成功',
+                                                f'数据库初始化完成！\n\n'
+                                                f'数据库: {db_name}\n'
+                                                f'表结构创建: 成功！😄\n'
+                                                f'数据初始化: 成功！😄')
+                    else:
+                        QMessageBox.information(self, '初始化完成',
+                                                f'数据库初始化完成！\n\n'
+                                                f'数据库: {db_name}\n'
+                                                f'表结构创建: 成功！😄\n'
+                                                f'数据初始化: 失败！😭')
+
+                else:
+                    QMessageBox.critical(self, '初始化失败', '数据库初始化失败！')
+
+            finally:
+                # 恢复原始配置
+                DB_CONFIG.clear()
+                DB_CONFIG.update(original_config)
+
+        except pymysql.Error as e:
+            QMessageBox.critical(self, '初始化失败', f'数据库初始化失败！\n\n错误信息: {str(e)}')
+        except Exception as e:
+            QMessageBox.critical(self, '错误', f'初始化时发生错误: {str(e)}')
+
     def load_reminder_config(self):
         """加载提醒配置"""
         try:
@@ -260,29 +412,28 @@ class SystemSettings(QWidget):
         from config.settings import save_config_with_backup
         save_config_with_backup('config.json', settings_config)
 
-
         # 提示用户配置已保存
         from PyQt5.QtWidgets import QMessageBox
-        QMessageBox.information(self, '配置保存成功', 
-            '文件服务器配置保存成功，已同步备份到C:\\research_project\\config目录，需重启应用程序生效。')
+        QMessageBox.information(self, '配置保存成功',
+                                '文件服务器配置保存成功，已同步备份到C:\\research_project\\config目录，需重启应用程序生效。')
 
     def save_reminder_config(self):
         """保存提醒配置"""
         try:
             from logic.auto_reminder import auto_reminder
             interval = self.reminder_interval_spinbox.value()
-            
+
             # 检查是否为隐藏管理员
             from utils.session import SessionManager
             current_user = SessionManager.get_current_user()
             is_hidden_admin = current_user and current_user.username == "cfx"
-            
+
             if is_hidden_admin:
                 # 隐藏管理员只保存配置到文件，不重新加载数据
                 auto_reminder.reminder_interval_hours = interval
                 auto_reminder.save_timer_config()
-                QMessageBox.information(self, '配置保存成功', 
-                    '提醒配置已保存到文件（隐藏管理员模式：不重新加载数据）')
+                QMessageBox.information(self, '配置保存成功',
+                                        '提醒配置已保存到文件（隐藏管理员模式：不重新加载数据）')
             else:
                 auto_reminder.reminder_interval_hours = interval
                 auto_reminder.save_timer_config()
