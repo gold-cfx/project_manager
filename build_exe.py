@@ -61,7 +61,7 @@ def build_exe():
         '--onefile',  # 单文件模式，发布时使用
         '--windowed',  # 无控制台窗口
         '--name=科研项目管理系统',
-        '--icon=icon/icon.svg' if os.path.exists('icon/icon.svg') else None,
+        '--icon=icon/icon.ico' if os.path.exists('icon/icon.ico') else None,
         '--add-data=config_file;config_file',
         '--add-data=help;help',
         '--add-data=icon;icon',
