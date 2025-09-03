@@ -10,7 +10,7 @@ from typing import List
 from PyQt5.QtCore import QObject, pyqtSignal, QTimer, Qt
 from PyQt5.QtWidgets import QMessageBox
 
-from config.settings import config_dir
+from config.settings import config_dir, BACKUP_CONFIG_DIR
 from logic.reminder_logic import ReminderLogic
 from models.reminder import Reminder
 
@@ -49,16 +49,21 @@ class AutoReminder(QObject):
     def load_timer_config(self):
         """加载定时任务配置"""
         try:
-            os.makedirs(config_dir, exist_ok=True)
+            # 优先加载备份目录的配置
+            backup_path = os.path.join(BACKUP_CONFIG_DIR, 'reminder_config.json')
             config_path = os.path.join(config_dir, 'reminder_config.json')
-            if os.path.exists(config_path):
-                with open(config_path, 'r', encoding='utf-8') as f:
-                    config = json.load(f)
-                    self.reminder_interval_hours = config.get('reminder_interval_hours', 1)
-            else:
+            
+            if os.path.exists(backup_path):
+                config_path = backup_path
+            elif not os.path.exists(config_path):
                 # 默认每小时检查一次
                 self.reminder_interval_hours = 1
                 self.save_timer_config()
+                return
+                
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                self.reminder_interval_hours = config.get('reminder_interval_hours', 1)
         except Exception as e:
             print(f"加载提醒配置时发生错误: {e}")
             self.reminder_interval_hours = 1
@@ -67,12 +72,22 @@ class AutoReminder(QObject):
         """保存定时任务配置"""
         try:
             os.makedirs(config_dir, exist_ok=True)
-            config_path = os.path.join(config_dir, 'reminder_config.json')
+            os.makedirs(BACKUP_CONFIG_DIR, exist_ok=True)
+            
             config = {
                 'reminder_interval_hours': self.reminder_interval_hours
             }
+            
+            # 保存到本地配置目录
+            config_path = os.path.join(config_dir, 'reminder_config.json')
             with open(config_path, 'w', encoding='utf-8') as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
+            
+            # 保存到备份目录
+            backup_path = os.path.join(BACKUP_CONFIG_DIR, 'reminder_config.json')
+            with open(backup_path, 'w', encoding='utf-8') as f:
+                json.dump(config, f, ensure_ascii=False, indent=2)
+                
         except Exception as e:
             print(f"保存提醒配置时发生错误: {e}")
 

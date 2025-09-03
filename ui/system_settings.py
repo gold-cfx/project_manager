@@ -256,13 +256,15 @@ class SystemSettings(QWidget):
         }
         settings_config["file_server"] = file_server_config
 
-        # 保存到配置文件
-        with open(settings.config_path, 'w', encoding='utf-8') as fw:
-            json.dump(settings_config, fw, ensure_ascii=False, indent=2)
+        # 使用新的备份保存函数
+        from config.settings import save_config_with_backup
+        save_config_with_backup('config.json', settings_config)
+
 
         # 提示用户配置已保存
         from PyQt5.QtWidgets import QMessageBox
-        QMessageBox.information(self, '配置保存成功', '文件服务器配置保存成功，需重启应用程序生效。')
+        QMessageBox.information(self, '配置保存成功', 
+            '文件服务器配置保存成功，已同步备份到C:\\research_project\\config目录，需重启应用程序生效。')
 
     def save_reminder_config(self):
         """保存提醒配置"""
