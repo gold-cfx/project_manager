@@ -126,6 +126,6 @@ class ProjectResultLogic:
                 else:
                     logger.error(f"创建项目成果失败，ID返回0或负数: {result_data.get('name')}")
             except Exception as e:
-                    logger.error(f"创建项目成果失败: {e}")
+                logger.error(f"创建项目成果失败: {e}")
 
         return saved_results

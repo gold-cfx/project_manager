@@ -8,11 +8,11 @@
   },
   "file_server": {
     "enabled": true,
-    "remote_server": false,
-    "host": "0.0.0.0",
+    "host": "192.168.103.89",
     "port": 5008,
+    "root_dir": "C:\\research_project\\attachments",
+    "remote_server": false,
     "remote_host": "127.0.0.1",
-    "remote_port": 5008,
-    "root_dir": "C:\\research_project\\attachments"
+    "remote_port": 5008
   }
 }

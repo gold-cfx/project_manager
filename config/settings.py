@@ -5,7 +5,6 @@
 """
 import json
 import os
-import shutil
 import socket
 # 确保datetime模块被导入
 from datetime import datetime
@@ -38,7 +37,7 @@ def get_config_file_path(filename):
     """
     backup_path = os.path.join(BACKUP_CONFIG_DIR, filename)
     local_path = os.path.join(config_dir, filename)
-    
+
     # 如果备份目录存在该文件，优先使用备份目录
     if os.path.exists(backup_path):
         return backup_path
@@ -57,7 +56,7 @@ def load_config_with_backup(filename):
         dict: 配置数据
     """
     config_file = get_config_file_path(filename)
-    
+
     try:
         if os.path.exists(config_file):
             with open(config_file, 'r', encoding='utf-8') as f:
@@ -65,8 +64,8 @@ def load_config_with_backup(filename):
         else:
             return {}
     except Exception as e:
-            logger.error(f"加载配置文件 {config_file} 时发生错误: {e}")
-            return {}
+        logger.error(f"加载配置文件 {config_file} 时发生错误: {e}")
+        return {}
 
 
 def save_config_with_backup(filename, config_data):
@@ -93,7 +92,7 @@ def save_config_with_backup(filename, config_data):
         with open(backup_path, 'w', encoding='utf-8') as f:
             json.dump(config_data, f, ensure_ascii=False, indent=2)
     except Exception as e:
-            logger.error(f"保存备份配置文件 {backup_path} 时发生错误: {e}")
+        logger.error(f"保存备份配置文件 {backup_path} 时发生错误: {e}")
 
 
 # 加载配置，支持备份目录优先级
@@ -122,7 +121,37 @@ SYSTEM_CONFIG = {
     'default_reminder_days': 30,  # 默认提前提醒天数
     'max_project_duration': 10,  # 最大项目持续时间（年）
 }
-DEFAULT_ROOT_DIR = "C:\\research_project\\attachments"
+
+
+# 获取安全的默认目录
+def get_safe_default_directory():
+    """获取用户有权限的安全默认存储目录"""
+    try:
+        # 尝试使用用户文档目录
+        import os
+        user_docs = os.path.join(os.path.expanduser("~"), "Documents")
+        safe_dir = os.path.join(user_docs, "ResearchProject", "attachments")
+
+        # 检查权限
+        try:
+            os.makedirs(safe_dir, exist_ok=True)
+            test_file = os.path.join(safe_dir, '.permission_test')
+            with open(test_file, 'w') as f:
+                f.write('test')
+            os.remove(test_file)
+            return safe_dir
+        except (PermissionError, OSError):
+            # 如果文档目录也不行，使用当前工作目录
+            current_dir = os.path.join(os.getcwd(), "research_project", "attachments")
+            return current_dir
+
+    except Exception:
+        # 最后fallback到C盘根目录
+        return "C:\\research_project\\attachments"
+
+
+# 使用安全的默认目录
+DEFAULT_ROOT_DIR = get_safe_default_directory()
 FILE_SERVER_CONFIG = {
     "enabled": True,
     "host": "127.0.0.1",
@@ -136,4 +165,3 @@ if 'file_server' in config:
     FILE_SERVER_CONFIG.update({k: v for k, v in config['file_server'].items() if not (v is None or v == "")})
 ICON_PATH = os.path.join(get_icon_path(), "icon.ico")
 QSS_PATH = os.path.join(get_icon_path(), "styles.qss")
-

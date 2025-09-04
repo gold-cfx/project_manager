@@ -48,12 +48,38 @@ class ProjectResultAttachmentLogic:
         
         Returns:
             新创建的附件ID
+            
+        Raises:
+            PermissionError: 当文件存储目录没有写入权限时
+            FileNotFoundError: 当文件不存在时
+            Exception: 其他文件上传错误
         """
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"文件不存在: {file_path}")
 
         if file_name is None:
             file_name = os.path.basename(file_path)
+
+        # 检查文件存储目录权限
+        from file_server.config import file_server_config
+        file_storage_directory = file_server_config.root_dir
+
+        try:
+            # 确保存储目录存在
+            os.makedirs(file_storage_directory, exist_ok=True)
+
+            # 检查目录写入权限
+            test_file = os.path.join(file_storage_directory, '.permission_test')
+            with open(test_file, 'w') as f:
+                f.write('test')
+            os.remove(test_file)
+        except PermissionError as e:
+            logger.error(f"文件存储目录权限不足: {file_storage_directory}")
+            raise PermissionError(
+                f"无法保存附件：文件存储目录 '{file_storage_directory}' 没有写入权限。\n\n请检查以下解决方案：\n1. 以管理员身份运行程序\n2. 修改存储目录权限\n3. 更换存储目录到用户有权限的位置")
+        except OSError as e:
+            logger.error(f"文件存储目录检查失败: {e}")
+            raise Exception(f"文件存储目录检查失败: {e}")
 
         # 使用文件服务器客户端上传文件
         sub_dir = self._generate_sub_dir(project_result_id)
@@ -63,9 +89,7 @@ class ProjectResultAttachmentLogic:
             raise Exception(f"文件上传失败: {result.get('message', '未知错误')}")
 
         # 获取当前文件服务器配置
-        from file_server.config import file_server_config
         host, port, _ = file_server_config.get_effective_config()
-        file_storage_directory = file_server_config.root_dir
 
         # 创建附件记录（存储相对路径和文件服务器信息）
         attachment = ProjectResultAttachmentCreate(

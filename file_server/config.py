@@ -6,7 +6,7 @@ import json
 from typing import Tuple
 
 from config import settings
-from config.settings import FILE_SERVER_CONFIG, DEFAULT_ROOT_DIR
+from config.settings import FILE_SERVER_CONFIG, DEFAULT_ROOT_DIR, pod_ip
 
 
 class FileServerConfig:
@@ -22,6 +22,14 @@ class FileServerConfig:
         self._config = FILE_SERVER_CONFIG
         # 确保总是启用文件服务器
         self._config['enabled'] = True
+        # 确保使用安全的默认目录
+        if 'root_dir' not in self._config or not self._config['root_dir']:
+            self._config['root_dir'] = self._get_safe_default_directory()
+
+    def _get_safe_default_directory(self):
+        """获取安全的默认存储目录"""
+        # 使用配置中的安全默认目录
+        return DEFAULT_ROOT_DIR
 
     @property
     def host(self) -> str:
@@ -94,7 +102,37 @@ class FileServerConfig:
         if self.remote_server and self.remote_host:
             return self.remote_host, self.remote_port, "remote"
         # 即使是本地配置，也返回remote模式，强制通过API访问
+        if self.host in ['127.0.0.1', 'localhost', '0.0.0.0']:
+            self.host = pod_ip
         return self.host, self.port, "remote"
+
+    def check_directory_permission(self, directory_path=None):
+        """检查目录权限
+        
+        Args:
+            directory_path: 要检查的目录路径，如果为None则使用当前配置的root_dir
+            
+        Returns:
+            tuple: (是否可写, 错误信息)
+        """
+        import os
+        if directory_path is None:
+            directory_path = self.root_dir
+
+        try:
+            # 确保目录存在
+            os.makedirs(directory_path, exist_ok=True)
+
+            # 检查写入权限
+            test_file = os.path.join(directory_path, '.permission_test')
+            with open(test_file, 'w') as f:
+                f.write('test')
+            os.remove(test_file)
+            return True, None
+        except PermissionError:
+            return False, f"目录 '{directory_path}' 没有写入权限"
+        except OSError as e:
+            return False, f"目录检查失败: {str(e)}"
 
     def _save_config(self):
         """保存配置到文件"""

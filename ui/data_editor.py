@@ -17,8 +17,8 @@ from logic.project_logic import ProjectLogic
 from logic.project_result_attachment_logic import ProjectResultAttachmentLogic
 from logic.project_result_logic import ProjectResultLogic
 from utils.dict_utils import dict_utils
-from utils.validator import Validator
 from utils.logger import get_logger
+from utils.validator import Validator
 
 logger = get_logger(__name__)
 
@@ -847,10 +847,27 @@ class BaseProjectEditor(object):
                     # 处理当前成果的附件
                     # 删除附件
                     for att_id in attachments_to_delete:
-                        self.attachment_logic.delete_attachment(att_id)
+                        try:
+                            self.attachment_logic.delete_attachment(att_id)
+                        except Exception as e:
+                            logger.warning(f"删除附件失败: {str(e)}")
+                            # 忽略删除错误，继续处理其他附件
+
                     # 添加附件
                     for file_path in attachments_to_add:
-                        self.attachment_logic.create_attachment(result_data['id'], file_path)
+                        try:
+                            self.attachment_logic.create_attachment(result_data['id'], file_path)
+                        except PermissionError as e:
+                            # 捕获权限错误并给出用户友好的提示
+                            QMessageBox.critical(self.widget, '保存失败', str(e))
+                            logger.error(f"附件保存权限错误: {str(e)}")
+                            return  # 停止处理，让用户重新操作
+                        except Exception as e:
+                            # 捕获其他异常
+                            QMessageBox.warning(self.widget, '附件保存失败',
+                                                f'文件 {os.path.basename(file_path)} 保存失败：{str(e)}')
+                            logger.error(f"附件保存失败: {str(e)}")
+                            continue  # 继续处理其他附件
 
                     # 清空已处理的附件列表，防止重复处理或影响其他成果
                     # 并且更新 self.results_data 中对应成果的附件列表

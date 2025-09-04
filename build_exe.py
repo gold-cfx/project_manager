@@ -26,12 +26,13 @@ def clean_build():
                 cache_dir = os.path.join(root, dir_name)
                 shutil.rmtree(cache_dir)
                 print(f"已清理缓存: {cache_dir}")
-        
+
         for file in files:
             if file.endswith('.pyc') or file.endswith('.pyo'):
                 cache_file = os.path.join(root, file)
                 os.remove(cache_file)
                 print(f"已清理缓存文件: {cache_file}")
+
 
 def check_dependencies():
     """检查必要的依赖"""
@@ -41,17 +42,18 @@ def check_dependencies():
     except ImportError:
         print("✗ PyInstaller未安装，正在安装...")
         subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pyinstaller'])
-    
+
     # 检查requirements.txt中的依赖
     requirements_file = 'requirements.txt'
     if os.path.exists(requirements_file):
         print("正在检查requirements.txt中的依赖...")
         subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', requirements_file])
 
+
 def build_exe():
     """构建可执行文件"""
     print("开始构建可执行文件...")
-    
+
     # PyInstaller命令参数
     cmd = [
         'pyinstaller',
@@ -73,15 +75,15 @@ def build_exe():
         '--collect-all=PyQt5',
         'main.py'
     ]
-    
+
     # 移除None参数
     cmd = [arg for arg in cmd if arg is not None]
-    
+
     try:
         # 执行打包命令
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
         print("构建成功!")
-        
+
         # 复制必要的文件到dist目录
         dist_dir = 'dist/科研项目管理系统'
         if os.path.exists(dist_dir):
@@ -95,15 +97,16 @@ def build_exe():
                     else:
                         shutil.copy2(src_path, dst_path)
                     print(f"已复制 {item} 目录")
-        
+
     except subprocess.CalledProcessError as e:
         print("构建失败!")
         print("错误输出:")
         print(e.stdout)
         print(e.stderr)
         return False
-    
+
     return True
+
 
 def create_run_script():
     """创建运行脚本"""
@@ -116,32 +119,33 @@ cd /d "%~dp0"
 start 科研项目管理系统.exe
 pause
 """
-        
+
         with open(os.path.join(dist_dir, '运行系统.bat'), 'w', encoding='gbk') as f:
             f.write(bat_content)
-        
+
         print("已创建运行脚本")
+
 
 def main():
     """主函数"""
     print("=" * 50)
     print("科研项目管理系统 打包工具")
     print("=" * 50)
-    
+
     # 清理旧构建
     print("1. 清理旧构建文件...")
     clean_build()
-    
+
     # 检查依赖
     print("2. 检查依赖...")
     check_dependencies()
-    
+
     # 构建
     print("3. 开始构建...")
     if build_exe():
         print("4. 创建运行脚本...")
         create_run_script()
-        
+
         print("\n" + "=" * 50)
         print("构建完成!")
         print("可执行文件位置: dist/科研项目管理系统/科研项目管理系统.exe")
@@ -149,6 +153,7 @@ def main():
         print("=" * 50)
     else:
         print("构建失败，请检查错误信息")
+
 
 if __name__ == '__main__':
     main()

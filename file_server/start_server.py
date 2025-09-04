@@ -80,7 +80,7 @@ class FileServerManager:
 
             # 启动文件服务器
             file_server.run(
-                host=file_server_config.host,
+                host='0.0.0.0',
                 port=file_server_config.port,
                 debug=False  # 生产环境中不使用debug模式
             )

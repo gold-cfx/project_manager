@@ -16,7 +16,6 @@ from PyQt5.QtWidgets import (
 
 from config.settings import ICON_PATH
 from models.user import User
-from utils.resource_path import get_icon_path
 from .data_dict_management import DataDictManagement
 from .help_document import HelpDocument
 from .project_query import ProjectQuery

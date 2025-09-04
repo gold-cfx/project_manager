@@ -312,10 +312,10 @@ class UserDAO:
         sql = "SELECT password FROM users WHERE username = %s"
         cursor.execute(sql, (username,))
         row = cursor.fetchone()
-        
+
         if not row:
             return False
-            
+
         return row['password'] == hashed_password
 
     @staticmethod

@@ -10,6 +10,9 @@ from flask import Flask, request, send_file, jsonify, abort
 from werkzeug.utils import secure_filename
 
 from file_server.config import file_server_config
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class FileServer:
