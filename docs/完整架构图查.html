@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>科研项目管理系统 - 完整架构图</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 3px solid #3498db;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 36px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 18px;
+            margin: 0;
+        }
+        
+        .chart-section {
+            margin-bottom: 60px;
+            padding: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            background: #fafafa;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .chart-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .chart-description {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .mermaid {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .controls {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #00b894, #00a085);
+        }
+        
+        .navigation {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .nav-item {
+            display: block;
+            padding: 8px 12px;
+            color: #2c3e50;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+        
+        .nav-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: white;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+<!--    <div class="navigation">-->
+<!--        <h4>快速导航</h4>-->
+<!--        <a href="#overview" class="nav-item">总体架构</a>-->
+<!--        <a href="#ui" class="nav-item">界面架构</a>-->
+<!--        <a href="#modules" class="nav-item">模块架构</a>-->
+<!--        <a href="#dataflow" class="nav-item">数据流</a>-->
+<!--        <a href="#techstack" class="nav-item">技术栈</a>-->
+<!--        <a href="#deployment" class="nav-item">部署架构</a>-->
+<!--    </div>-->
+
+    <div class="container">
+        <div class="header">
+            <h1>科研项目管理系统</h1>
+            <p>完整系统架构图 - 可视化技术文档</p>
+        </div>
+
+<!--        <div class="controls">-->
+<!--            <button class="btn" onclick="location.reload()">🔄 刷新图表</button>-->
+<!--            <button class="btn btn-secondary" onclick="window.print()">🖨️ 打印文档</button>-->
+<!--            <button class="btn btn-success" onclick="downloadCharts()">📥 下载图片</button>-->
+<!--        </div>-->
+
+        <!-- 1. 系统总体架构 -->
+        <div id="overview" class="chart-section">
+            <div class="chart-title">🏗️ 系统总体架构</div>
+            <div class="chart-description">
+                <strong>架构特点：</strong>采用分层架构设计，包含前端界面层、业务逻辑层、数据访问层和基础设施层，各层职责清晰，便于维护和扩展。
+            </div>
+            <div class="mermaid">
+                graph TB
+                    subgraph "前端界面层"
+                        UI[PyQt5用户界面]
+                        subgraph "主窗口组件"
+                            MW[主窗口 MainWindow]
+                            LM[登录模块 LoginDialog]
+                            MB[菜单栏 MenuBar]
+                            TB[工具栏 ToolBar]
+                            SB[状态栏 StatusBar]
+                        end
+                        
+                        subgraph "功能模块界面"
+                            PR[项目登记 ProjectRegistration]
+                            PQ[项目查询 ProjectQuery]
+                            RM[提醒管理 ReminderManagement]
+                            UP[用户面板 UserPanel]
+                        end
+                    end
+
+                    subgraph "业务逻辑层"
+                        subgraph "核心业务模块"
+                            PM[项目管理逻辑 ProjectManager]
+                            QM[查询管理逻辑 QueryManager]
+                            RM_LOGIC[提醒逻辑 ReminderLogic]
+                            UM[用户管理逻辑 UserManager]
+                            AUTH[权限认证逻辑 AuthManager]
+                        end
+                        
+                        subgraph "数据处理模块"
+                            EH[Excel处理器 ExcelHandler]
+                            CH[图表生成器 ChartHandler]
+                            DH[数据验证器 DataValidator]
+                            CALC[计算引擎 Calculator]
+                        end
+                    end
+
+                    subgraph "数据访问层"
+                        subgraph "数据库操作"
+                            DB[数据库连接管理 DatabaseConnection]
+                            DAO[数据访问对象 DAO]
+                            MODEL[数据模型 Models]
+                        end
+                        
+                        subgraph "文件存储"
+                            FS[文件服务器 FileServer]
+                            UPLOAD[文件上传器 Uploader]
+                            DOWNLOAD[文件下载器 Downloader]
+                        end
+                    end
+
+                    subgraph "基础设施层"
+                        subgraph "数据库"
+                            MYSQL[(MySQL数据库)]
+                        end
+                        
+                        subgraph "文件系统"
+                            LOCAL[本地文件系统]
+                        end
+                        
+                        subgraph "第三方服务"
+                                PYQT5[PyQt5框架]
+                                PANDAS[Pandas数据处理]
+                                MATPLOTLIB[Matplotlib图表]
+                                PYMYSQL[PyMySQL驱动]
+                        end
+                    end
+
+                    UI --> PM
+                    PM --> DAO
+                    DAO --> MYSQL
+                    DAO --> LOCAL
+            </div>
+        </div>
+
+        <!-- 2. 用户界面架构 -->
+        <div id="ui" class="chart-section">
+            <div class="chart-title">🖥️ 用户界面架构</div>
+            <div class="chart-description">
+                <strong>界面特点：</strong>采用PyQt5框架，提供现代化GUI界面，包含主窗口、菜单栏、工具栏、状态栏等标准桌面应用元素。
+            </div>
+            <div class="mermaid">
+                graph TD
+                    subgraph "主窗口 MainWindow"
+                        MW[MainWindow类]
+                        subgraph "菜单结构"
+                            M1[项目管理]
+                            M2[查询统计]
+                            M3[提醒管理]
+                            M4[系统管理]
+                        end
+                        
+                        subgraph "工具栏按钮"
+                            B1[添加项目]
+                            B2[查询项目]
+                            B3[导出Excel]
+                            B4[生成图表]
+                        end
+                        
+                        subgraph "状态栏信息"
+                            S1[当前用户]
+                            S2[项目总数]
+                            S3[待办提醒]
+                            S4[系统时间]
+                        end
+                    end
+                    
+                    MW --> M1
+                    MW --> M2
+                    MW --> M3
+                    MW --> M4
+                    MW --> B1
+                    MW --> B2
+                    MW --> B3
+                    MW --> B4
+                    MW --> S1
+                    MW --> S2
+                    MW --> S3
+                    MW --> S4
+            </div>
+        </div>
+
+        <!-- 3. 模块架构 -->
+        <div id="modules" class="chart-section">
+            <div class="chart-title">⚙️ 核心模块架构</div>
+            <div class="chart-description">
+                <strong>模块设计：</strong>核心业务模块包括项目管理、查询统计、提醒系统，每个模块都有清晰的职责边界和接口定义。
+            </div>
+            <div class="mermaid">
+                graph TD
+                    subgraph "项目管理模块"
+                        PM[ProjectManager类]
+                        subgraph "项目登记"
+                            PR[ProjectRegistration类]
+                            ADD[添加项目]
+                            EDIT[编辑项目]
+                            DELETE[删除项目]
+                        end
+                        
+                        subgraph "Excel处理"
+                            EH[ExcelHandler类]
+                            TEMPLATE[生成模板]
+                            IMPORT[批量导入]
+                            EXPORT[数据导出]
+                        end
+                    end
+                    
+                    subgraph "查询统计模块"
+                        QM[QueryManager类]
+                        subgraph "查询功能"
+                            BASIC[基础查询]
+                            ADVANCED[高级查询]
+                            FILTER[条件筛选]
+                        end
+                        
+                        subgraph "图表生成"
+                            CH[ChartHandler类]
+                            BAR[柱状图]
+                            PIE[饼图]
+                            LINE[折线图]
+                        end
+                    end
+                    
+                    PM --> PR
+                    PR --> ADD
+                    QM --> BASIC
+                    QM --> CH
+            </div>
+        </div>
+
+        <!-- 4. 数据流架构 -->
+        <div id="dataflow" class="chart-section">
+            <div class="chart-title">🔄 数据流架构</div>
+            <div class="chart-description">
+                <strong>数据流向：</strong>用户操作 → 界面层 → 业务逻辑 → 数据验证 → 计算处理 → 数据存储，确保数据完整性和一致性。
+            </div>
+            <div class="mermaid">
+                graph LR
+                    subgraph "用户操作"
+                        USER[用户]
+                    end
+                    
+                    subgraph "界面层"
+                        UI[PyQt5界面]
+                    end
+                    
+                    subgraph "业务逻辑"
+                        BL[业务逻辑层]
+                        VALID[数据验证]
+                        CALC[计算处理]
+                    end
+                    
+                    subgraph "数据访问"
+                        DAO[DAO层]
+                        CACHE[缓存]
+                    end
+                    
+                    subgraph "数据存储"
+                        DB[(MySQL)]
+                        FILE[文件系统]
+                    end
+                    
+                    USER --> UI
+                    UI --> BL
+                    BL --> VALID
+                    VALID --> CALC
+                    CALC --> DAO
+                    DAO --> CACHE
+                    CACHE --> DB
+                    DAO --> FILE
+            </div>
+        </div>
+
+        <!-- 5. 技术栈架构 -->
+        <div id="techstack" class="chart-section">
+            <div class="chart-title">🛠️ 技术栈架构</div>
+            <div class="chart-description">
+                <strong>技术选型：</strong>基于Python + PyQt5的桌面应用架构，结合MySQL数据库和现代化数据处理库，提供稳定可靠的系统性能。
+            </div>
+            <div class="mermaid">
+                graph TD
+                    subgraph "表示层"
+                        PYQT5[PyQt5 5.15.9]
+                        QSS[QSS样式表]
+                    end
+                    
+                    subgraph "业务逻辑层"
+                        PYTHON[Python 3.8+]
+                        PANDAS[Pandas 2.3.1]
+                        NUMPY[NumPy]
+                    end
+                    
+                    subgraph "数据访问层"
+                        PYMYSQL[PyMySQL 1.1.1]
+                        SQLALCHEMY[原生SQL]
+                    end
+                    
+                    subgraph "图表引擎"
+                        MATPLOTLIB[Matplotlib 3.10.5]
+                        SEABORN[Seaborn]
+                    end
+                    
+                    subgraph "文件处理"
+                        OPENPYXL[OpenPyXL]
+                        XLWT[xlwt]
+                        XLRD[xlrd]
+                    end
+                    
+                    subgraph "基础设施"
+                        MYSQL_DB[(MySQL 8.0)]
+                        FILE_SYS[本地文件系统]
+                        LOG[日志系统]
+                    end
+            </div>
+        </div>
+
+        <!-- 6. 部署架构 -->
+        <div id="deployment" class="chart-section">
+            <div class="chart-title">🚀 部署架构</div>
+            <div class="chart-description">
+                <strong>部署特点：</strong>单机部署模式，一键安装包，包含完整运行环境和依赖，支持Windows系统快速部署。
+            </div>
+            <div class="mermaid">
+                graph TB
+                    subgraph "用户终端"
+                        APP[科研项目管理系统.exe]
+                    end
+                    
+                    subgraph "本地环境"
+                        subgraph "应用程序"
+                            MAIN[main.exe]
+                            DLL[依赖DLL]
+                            CONFIG[config.json]
+                        end
+                        
+                        subgraph "数据存储"
+                            MYSQL_SVC[MySQL服务]
+                            DB_FILE[数据库文件]
+                            ATTACH[附件文件夹]
+                            LOGS[日志文件夹]
+                        end
+                        
+                        subgraph "运行时"
+                            PYTHON_RT[Python运行时]
+                            QT_RT[Qt运行时]
+                        end
+                    end
+                    
+                    APP --> MAIN
+                    MAIN --> PYTHON_RT
+                    MAIN --> QT_RT
+                    MAIN --> DLL
+                    MAIN --> CONFIG
+                    MAIN --> MYSQL_SVC
+                    MYSQL_SVC --> DB_FILE
+                    MAIN --> ATTACH
+                    MAIN --> LOGS
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        <p>📋 科研项目管理系统 - 完整技术文档 | 基于PyQt5 + MySQL架构</p>
+<!--        <p>💡 使用说明：双击保存为HTML文件，可在浏览器中离线查看完整架构图</p>-->
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            themeVariables: {
+                fontFamily: 'Microsoft YaHei, Arial, sans-serif',
+                fontSize: '14px'
+            }
+        });
+
+        // 平滑滚动
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                target.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        // 下载功能
+        function downloadCharts() {
+            alert('📥 下载功能说明：\n\n1. 使用浏览器打印功能 (Ctrl+P)\n2. 选择"另存为PDF"\n3. 或使用截图工具保存为图片\n\n如需高清图片，请使用在线Mermaid编辑器：\nhttps://mermaid.live');
+        }
+
+        // 添加页面加载动画
+        window.addEventListener('load', function() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease-in-out';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body>
+</html>

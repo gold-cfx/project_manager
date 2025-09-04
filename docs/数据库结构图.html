@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>科研项目管理系统 - 数据库结构图</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 3px solid #3498db;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 36px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 18px;
+            margin: 0;
+        }
+        
+        .section {
+            margin-bottom: 50px;
+            padding: 30px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            background: #fafafa;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .table-info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .table-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .table-description {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+        
+        .field-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .field-item {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            border-left: 3px solid #28a745;
+        }
+        
+        .primary-key {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        
+        .foreign-key {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+        
+        .mermaid {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 14px;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .controls {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>科研项目管理系统</h1>
+            <p>数据库结构图 - 完整ER图和表设计</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">7</div>
+                <div class="stat-label">总表数量</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">6</div>
+                <div class="stat-label">外键关系</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">UTF-8编码</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">InnoDB</div>
+                <div class="stat-label">存储引擎</div>
+            </div>
+        </div>
+
+        <!-- 图例 -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #dc3545;"></div>
+                <span>主键</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffc107;"></div>
+                <span>外键</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #28a745;"></div>
+                <span>普通字段</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #17a2b8;"></div>
+                <span>时间戳</span>
+            </div>
+        </div>
+
+        <!-- 1. 数据库ER图 -->
+        <div class="section">
+            <div class="section-title">🔗 数据库ER图</div>
+            <div class="table-info">
+                <strong>设计特点：</strong>采用规范化设计，表间关系清晰，支持完整业务功能，包含项目、用户、提醒、成果等核心实体。
+            </div>
+            <div class="mermaid">
+                erDiagram
+                    %% 用户表
+                    users ||--o{ projects : "创建/管理"
+                    users ||--o{ reminders : "接收提醒"
+                    
+                    %% 项目表
+                    projects ||--o{ project_result : "包含成果"
+                    projects ||--o{ reminders : "触发提醒"
+                    
+                    %% 成果表
+                    project_result ||--o{ project_result_attachment : "关联附件"
+                    
+                    %% 数据字典表
+                    data_dicts ||--o{ projects : "提供选项值"
+                    
+                    %% 用户表
+                    users {
+                        int id PK
+                        string username UK
+                        string password
+                        string real_name
+                        string role
+                        string status
+                        string email
+                        string phone
+                        datetime last_login
+                        datetime create_time
+                        datetime update_time
+                    }
+                    
+                    %% 项目表
+                    projects {
+                        int id PK
+                        string project_name UK
+                        string leader
+                        string department
+                        string phone
+                        string project_source
+                        string project_type
+                        string level
+                        decimal funding_amount
+                        string funding_unit
+                        string approval_year
+                        string project_number
+                        date start_date
+                        date end_date
+                        string status
+                        datetime create_time
+                        datetime update_time
+                    }
+                    
+                    %% 项目成果表
+                    project_result {
+                        int id PK
+                        int project_id FK
+                        string type
+                        string name
+                        date date
+                    }
+                    
+                    %% 成果附件表
+                    project_result_attachment {
+                        int id PK
+                        int project_result_id FK
+                        string file_name
+                        string file_path
+                        string file_server_host
+                        string file_server_port
+                        string file_storage_directory
+                        datetime upload_time
+                    }
+                    
+                    %% 提醒表
+                    reminders {
+                        int id PK
+                        int project_id FK
+                        string project_name
+                        string reminder_type
+                        int days_before
+                        string reminder_way
+                        text content
+                        date start_date
+                        string status
+                        datetime create_time
+                    }
+                    
+                    %% 数据字典表
+                    data_dicts {
+                        int id PK
+                        string dict_type
+                        string dict_key
+                        string dict_value
+                        int sort_order
+                        boolean is_active
+                        string description
+                        datetime create_time
+                        datetime update_time
+                    }
+                    
+                    %% 帮助文档表
+                    help_docs {
+                        int id PK
+                        string title
+                        text content
+                        string version
+                        datetime create_time
+                        datetime update_time
+                    }
+                    
+                    %% 系统配置表
+                    system_config {
+                        int id PK
+                        string config_key UK
+                        text config_value
+                        string description
+                        datetime update_time
+                    }
+            </div>
+        </div>
+
+        <!-- 2. 用户表结构 -->
+        <div class="section">
+            <div class="section-title">👥 用户表 (users)</div>
+            <div class="table-info">
+                <div class="table-name">users</div>
+                <div class="table-description">存储系统用户信息，支持权限管理和用户认证</div>
+                <div class="field-list">
+                    <div class="field-item primary-key">id: INT AUTO_INCREMENT PK</div>
+                    <div class="field-item">username: VARCHAR(50) UNIQUE NOT NULL</div>
+                    <div class="field-item">password: VARCHAR(64) NOT NULL</div>
+                    <div class="field-item">real_name: VARCHAR(50) NOT NULL</div>
+                    <div class="field-item">role: VARCHAR(20) DEFAULT 'user'</div>
+                    <div class="field-item">status: VARCHAR(20) DEFAULT 'active'</div>
+                    <div class="field-item">email: VARCHAR(100)</div>
+                    <div class="field-item">phone: VARCHAR(20)</div>
+                    <div class="field-item">last_login: TIMESTAMP</div>
+                    <div class="field-item">create_time: TIMESTAMP DEFAULT CURRENT_TIMESTAMP</div>
+                    <div class="field-item">update_time: TIMESTAMP ON UPDATE</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 项目表结构 -->
+        <div class="section">
+            <div class="section-title">📋 项目表 (projects)</div>
+            <div class="table-info">
+                <div class="table-name">projects</div>
+                <div class="table-description">核心项目信息表，存储科研项目的基本信息和状态</div>
+                <div class="field-list">
+                    <div class="field-item primary-key">id: INT AUTO_INCREMENT PK</div>
+                    <div class="field-item">project_name: VARCHAR(255) UNIQUE NOT NULL</div>
+                    <div class="field-item">leader: VARCHAR(50) NOT NULL</div>
+                    <div class="field-item">department: VARCHAR(50) NOT NULL</div>
+                    <div class="field-item">phone: VARCHAR(20) NOT NULL</div>
+                    <div class="field-item">project_source: VARCHAR(50) NOT NULL</div>
+                    <div class="field-item">project_type: VARCHAR(50) NOT NULL</div>
+                    <div class="field-item">level: VARCHAR(20) NOT NULL</div>
+                    <div class="field-item">funding_amount: DECIMAL(15,2) NOT NULL</div>
+                    <div class="field-item">funding_unit: VARCHAR(100) NOT NULL</div>
+                    <div class="field-item">approval_year: VARCHAR(20) NOT NULL</div>
+                    <div class="field-item">project_number: VARCHAR(50) NOT NULL</div>
+                    <div class="field-item">start_date: DATE NOT NULL</div>
+                    <div class="field-item">end_date: DATE NOT NULL</div>
+                    <div class="field-item">status: VARCHAR(20) DEFAULT '进行中'</div>
+                    <div class="field-item">create_time: TIMESTAMP DEFAULT CURRENT_TIMESTAMP</div>
+                    <div class="field-item">update_time: TIMESTAMP ON UPDATE</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. 项目成果表结构 -->
+        <div class="section">
+            <div class="section-title">🏆 项目成果表 (project_result)</div>
+            <div class="table-info">
+                <div class="table-name">project_result</div>
+                <div class="table-description">存储项目产生的各类成果信息，与项目表关联</div>
+                <div class="field-list">
+                    <div class="field-item primary-key">id: INT AUTO_INCREMENT PK</div>
+                    <div class="field-item foreign-key">project_id: INT NOT NULL FK → projects.id</div>
+                    <div class="field-item">type: VARCHAR(20) NOT NULL</div>
+                    <div class="field-item">name: VARCHAR(255) NOT NULL</div>
+                    <div class="field-item">date: DATE NOT NULL</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. 成果附件表结构 -->
+        <div class="section">
+            <div class="section-title">📎 成果附件表 (project_result_attachment)</div>
+            <div class="table-info">
+                <div class="table-name">project_result_attachment</div>
+                <div class="table-description">存储项目成果的附件文件信息，支持文件服务器集成</div>
+                <div class="field-list">
+                    <div class="field-item primary-key">id: INT AUTO_INCREMENT PK</div>
+                    <div class="field-item foreign-key">project_result_id: INT NOT NULL FK → project_result.id</div>
+                    <div class="field-item">file_name: VARCHAR(255) NOT NULL</div>
+                    <div class="field-item">file_path: VARCHAR(255) NOT NULL</div>
+                    <div class="field-item">file_server_host: VARCHAR(255) NOT NULL</div>
+                    <div class="field-item">file_server_port: VARCHAR(255) NOT NULL</div>
+                    <div class="field-item">file_storage_directory: VARCHAR(255) NOT NULL</div>
+                    <div class="field-item">upload_time: TIMESTAMP DEFAULT CURRENT_TIMESTAMP</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. 提醒表结构 -->
+        <div class="section">
+            <div class="section-title">⏰ 提醒表 (reminders)</div>
+            <div class="table-info">
+                <div class="table-name">reminders</div>
+                <div class="table-description">项目到期提醒系统，支持多种提醒方式和提前期设置</div>
+                <div class="field-list">
+                    <div class="field-item primary-key">id: INT AUTO_INCREMENT PK</div>
+                    <div class="field-item foreign-key">project_id: INT NOT NULL FK → projects.id</div>
+                    <div class="field-item">project_name: VARCHAR(255) NOT NULL</div>
+                    <div class="field-item">reminder_type: VARCHAR(20) NOT NULL</div>
+                    <div class="field-item">days_before: INT NOT NULL</div>
+                    <div class="field-item">reminder_way: VARCHAR(20) NOT NULL</div>
+                    <div class="field-item">content: TEXT</div>
+                    <div class="field-item">start_date: DATE NOT NULL</div>
+                    <div class="field-item">status: VARCHAR(10) DEFAULT '未读'</div>
+                    <div class="field-item">create_time: TIMESTAMP NOT NULL</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. 数据字典表结构 -->
+        <div class="section">
+            <div class="section-title">📊 数据字典表 (data_dicts)</div>
+            <div class="table-info">
+                <div class="table-name">data_dicts</div>
+                <div class="table-description">系统数据字典，存储下拉选项、状态值等枚举数据</div>
+                <div class="field-list">
+                    <div class="field-item primary-key">id: INT AUTO_INCREMENT PK</div>
+                    <div class="field-item">dict_type: VARCHAR(50) NOT NULL</div>
+                    <div class="field-item">dict_key: VARCHAR(50) NOT NULL</div>
+                    <div class="field-item">dict_value: VARCHAR(100) NOT NULL</div>
+                    <div class="field-item">sort_order: INT DEFAULT 0</div>
+                    <div class="field-item">is_active: TINYINT(1) DEFAULT 1</div>
+                    <div class="field-item">description: VARCHAR(200)</div>
+                    <div class="field-item">create_time: TIMESTAMP DEFAULT CURRENT_TIMESTAMP</div>
+                    <div class="field-item">update_time: TIMESTAMP ON UPDATE</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. 表关系图 -->
+        <div class="section">
+            <div class="section-title">🔗 表关系详细图</div>
+            <div class="table-info">
+                <strong>关系说明：</strong>数据库采用规范化设计，通过外键建立表间关联，确保数据完整性和一致性。
+            </div>
+            <div class="mermaid">
+                graph TD
+                    subgraph "核心业务表"
+                        users[users<br/>用户表]
+                        projects[projects<br/>项目表]
+                        reminders[reminders<br/>提醒表]
+                        project_result[project_result<br/>成果表]
+                        project_result_attachment[project_result_attachment<br/>附件表]
+                    end
+                    
+                    subgraph "系统配置表"
+                        data_dicts[data_dicts<br/>数据字典]
+                        help_docs[help_docs<br/>帮助文档]
+                        system_config[system_config<br/>系统配置]
+                    end
+                    
+                    %% 用户相关关系
+                    users -->|一对多| projects
+                    users -->|一对多| reminders
+                    
+                    %% 项目相关关系
+                    projects -->|一对多| project_result
+                    projects -->|一对多| reminders
+                    
+                    %% 成果相关关系
+                    project_result -->|一对多| project_result_attachment
+                    
+                    %% 样式设置
+                    style users fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                    style projects fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+                    style project_result fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+                    style reminders fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+                    style data_dicts fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+                    style help_docs fill:#f1f8e9,stroke:#689f38,stroke-width:2px
+                    style system_config fill:#fff8e1,stroke:#ffa000,stroke-width:2px
+                    style project_result_attachment fill:#e0f2f1,stroke:#00796b,stroke-width:2px
+            </div>
+        </div>
+
+        <!-- 9. 数据库设计特点 -->
+        <div class="section">
+            <div class="section-title">🎯 数据库设计特点</div>
+            <div class="table-info">
+                <h3>设计亮点：</h3>
+                <ul>
+                    <li><strong>规范化设计：</strong>遵循第三范式，减少数据冗余</li>
+                    <li><strong>外键约束：</strong>确保数据完整性，支持级联删除</li>
+                    <li><strong>UTF-8编码：</strong>支持多语言字符存储</li>
+                    <li><strong>InnoDB引擎：</strong>支持事务和外键约束</li>
+                    <li><strong>时间戳字段：</strong>自动记录创建和更新时间</li>
+                    <li><strong>唯一索引：</strong>防止重复数据，如用户名、项目名</li>
+                    <li><strong>软删除支持：</strong>通过status字段实现逻辑删除</li>
+                </ul>
+                
+                <h3>性能优化：</h3>
+                <ul>
+                    <li><strong>复合索引：</strong>dict_type + dict_key 联合索引</li>
+                    <li><strong>外键索引：</strong>自动为外键字段创建索引</li>
+                    <li><strong>时间索引：</strong>create_time、update_time索引</li>
+                    <li><strong>状态索引：</strong>status字段索引优化查询</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 10. 数据字典示例 -->
+        <div class="section">
+            <div class="section-title">📋 数据字典示例</div>
+            <div class="table-info">
+                <h3>字典类型说明：</h3>
+                <div class="field-list">
+                    <div class="field-item">project_source: 项目来源（国家级、省部级、校级等）</div>
+                    <div class="field-item">project_type: 项目类型（基础研究、应用研究、开发研究等）</div>
+                    <div class="field-item">level: 项目级别（重大项目、重点项目、一般项目等）</div>
+                    <div class="field-item">status: 项目状态（进行中、已完成、已终止等）</div>
+                    <div class="field-item">reminder_type: 提醒类型（到期提醒、进度提醒等）</div>
+                    <div class="field-item">reminder_way: 提醒方式（弹窗、邮件、短信等）</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            er: {
+                useMaxWidth: true
+            },
+            themeVariables: {
+                fontFamily: 'Microsoft YaHei, Arial, sans-serif',
+                fontSize: '14px'
+            }
+        });
+
+        // 添加平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // 页面加载动画
+        window.addEventListener('load', function() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease-in-out';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
