@@ -43,6 +43,7 @@ class ProjectQuery(QWidget):
         self.load_project_sources()
         self.load_project_types()
         self.select_all = False
+        self.sort_order = {}  # 记录每列的排序状态
 
     def init_ui(self):
         # 创建主布局
@@ -376,20 +377,36 @@ class ProjectQuery(QWidget):
         self.display_query_results(projects)
 
     def display_query_results(self, projects):
-        # 显示查询结果
+        """显示查询结果"""
+        if not projects:
+            QMessageBox.information(self, '提示', '没有找到符合条件的项目')
+            self.result_table.setRowCount(0)
+            return
+
+        # 清空表格
         self.result_table.setRowCount(0)
         self.projects_data = projects  # 保存项目数据
         self.selected_rows.clear()  # 清空选中行集合
 
-        # 设置表头（确保已添加复选框列）
-        if self.result_table.columnCount() != 14:
-            self.result_table.setColumnCount(14)
-            self.result_table.setHorizontalHeaderLabels([
-                '选择', '项目名称', '负责人', '科室', '项目来源',
-                '项目类型', '项目级别', '资助经费（万元）', '资助单位',
-                '立项年度', '项目编号', '项目开始时间', '项目结束时间',
-                '项目状态'
-            ])
+        # 设置列数
+        self.result_table.setColumnCount(14)
+        self.result_table.setHorizontalHeaderLabels([
+            '选择', '项目名称', '负责人', '科室', '项目来源',
+            '项目类型', '项目级别', '资助经费（万元）', '资助单位',
+            '立项年度', '项目编号', '项目开始时间', '项目结束时间',
+            '项目状态'
+        ])
+
+        # 设置表头样式
+        header = self.result_table.horizontalHeader()
+        header.setStyleSheet("""
+            QHeaderView::section {
+                background-color: #f0f0f0;
+                padding: 5px;
+                border: 1px solid #ddd;
+                font-weight: bold;
+            }
+        """)
 
         # 设置表头复选框
         header_item = QTableWidgetItem()
@@ -432,6 +449,7 @@ class ProjectQuery(QWidget):
         self.projects_data = projects
         self.selected_rows = set()  # 跟踪选中的行
         self.select_all = False
+        self.sort_order = {}  # 重置排序状态
 
         # 连接单元格点击事件以更新选中状态
         self.result_table.itemClicked.connect(self.on_item_clicked)
@@ -563,6 +581,151 @@ class ProjectQuery(QWidget):
                     self.selected_rows.add(project_id)
                 else:
                     self.selected_rows.discard(project_id)
+        else:
+            # 实现排序功能
+            self.sort_table_by_column(logical_index)
+
+    def sort_table_by_column(self, column):
+        """按列排序表格"""
+        if not hasattr(self, 'projects_data') or not self.projects_data:
+            return
+
+        # 获取列名
+        header_item = self.result_table.horizontalHeaderItem(column)
+        column_name = header_item.text()
+
+        # 切换排序方向
+        if column not in self.sort_order:
+            self.sort_order[column] = Qt.AscendingOrder
+        else:
+            self.sort_order[column] = Qt.DescendingOrder if self.sort_order[column] == Qt.AscendingOrder else Qt.AscendingOrder
+
+        # 定义列名到数据字段的映射
+        column_mapping = {
+            1: 'project_name',      # 项目名称
+            2: 'leader',           # 负责人
+            3: 'department',       # 科室
+            4: 'project_source',   # 项目来源
+            5: 'project_type',     # 项目类型
+            6: 'level',            # 项目级别
+            7: 'funding_amount',   # 资助经费
+            8: 'funding_unit',     # 资助单位
+            9: 'approval_year',    # 立项年度
+            10: 'project_number',  # 项目编号
+            11: 'start_date',      # 项目开始时间
+            12: 'end_date',        # 项目结束时间
+            13: 'status'           # 项目状态
+        }
+
+        if column not in column_mapping:
+            return
+
+        field_name = column_mapping[column]
+
+        try:
+            # 执行排序
+            sorted_projects = sorted(
+                self.projects_data,
+                key=lambda x: self.get_sort_key(x, field_name),
+                reverse=(self.sort_order[column] == Qt.DescendingOrder)
+            )
+
+            # 重新显示排序后的数据
+            self.display_sorted_results(sorted_projects)
+
+            # 更新表头显示排序指示器
+            self.update_sort_indicator(column)
+
+        except Exception as e:
+            logger.error(f"排序失败: {str(e)}")
+            QMessageBox.warning(self, '排序错误', f'排序失败: {str(e)}')
+
+    def get_sort_key(self, project, field_name):
+        """获取排序键值"""
+        value = project.get(field_name, '')
+        
+        # 处理空值
+        if value is None or value == '':
+            return ''
+
+        # 根据字段类型处理排序值
+        if field_name == 'funding_amount':
+            # 处理资助经费（数值）
+            try:
+                return float(str(value).replace(',', ''))
+            except (ValueError, TypeError):
+                return 0.0
+        elif field_name in ['approval_year']:
+            # 处理年份（数值）
+            try:
+                return int(str(value))
+            except (ValueError, TypeError):
+                return 0
+        elif field_name in ['start_date', 'end_date']:
+            # 处理日期
+            try:
+                return QDate.fromString(str(value), 'yyyy-MM-dd').toString('yyyyMMdd')
+            except:
+                return ''
+        else:
+            # 默认按字符串排序
+            return str(value).lower()
+
+    def display_sorted_results(self, sorted_projects):
+        """显示排序后的结果"""
+        # 清空表格
+        self.result_table.setRowCount(0)
+        
+        # 重新填充排序后的数据
+        for row, project in enumerate(sorted_projects):
+            self.result_table.insertRow(row)
+
+            # 添加复选框
+            check_item = QTableWidgetItem()
+            check_item.setCheckState(Qt.Unchecked)
+            check_item.setData(Qt.UserRole, project.get('id'))
+            self.result_table.setItem(row, 0, check_item)
+
+            # 设置其他列数据
+            self.result_table.setItem(row, 1, QTableWidgetItem(project.get('project_name', '')))
+            self.result_table.setItem(row, 2, QTableWidgetItem(project.get('leader', '')))
+            self.result_table.setItem(row, 3, QTableWidgetItem(project.get('department', '')))
+            self.result_table.setItem(row, 4, QTableWidgetItem(project.get('project_source', '')))
+            self.result_table.setItem(row, 5, QTableWidgetItem(project.get('project_type', '')))
+            self.result_table.setItem(row, 6, QTableWidgetItem(project.get('level', '')))
+            self.result_table.setItem(row, 7, QTableWidgetItem(str(project.get('funding_amount', ''))))
+            self.result_table.setItem(row, 8, QTableWidgetItem(project.get('funding_unit', '')))
+            self.result_table.setItem(row, 9, QTableWidgetItem(project.get('approval_year', '')))
+            self.result_table.setItem(row, 10, QTableWidgetItem(project.get('project_number', '')))
+            self.result_table.setItem(row, 11, QTableWidgetItem(project.get('start_date', '')))
+            self.result_table.setItem(row, 12, QTableWidgetItem(project.get('end_date', '')))
+            self.result_table.setItem(row, 13, QTableWidgetItem(project.get('status', '')))
+
+        # 恢复选中状态
+        self.restore_selection_state()
+
+    def update_sort_indicator(self, column):
+        """更新排序指示器"""
+        # 重置所有列的排序指示器
+        for col in range(1, self.result_table.columnCount()):
+            header_item = self.result_table.horizontalHeaderItem(col)
+            if col == column:
+                if self.sort_order[column] == Qt.AscendingOrder:
+                    header_item.setText(header_item.text().split(' ')[0] + ' ↑')
+                else:
+                    header_item.setText(header_item.text().split(' ')[0] + ' ↓')
+            else:
+                # 恢复原始文本（去掉排序指示器）
+                header_item.setText(header_item.text().split(' ')[0])
+
+    def restore_selection_state(self):
+        """恢复选中状态"""
+        # 根据保存的选中行ID恢复选中状态
+        for row in range(self.result_table.rowCount()):
+            item = self.result_table.item(row, 0)
+            project_id = item.data(Qt.UserRole)
+            if project_id in self.selected_rows:
+                item.setCheckState(Qt.Checked)
 
     def on_item_clicked(self, item):
         """单元格点击事件处理"""
