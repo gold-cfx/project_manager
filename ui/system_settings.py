@@ -258,7 +258,7 @@ class SystemSettings(QWidget):
             temp_config = {
                 'host': host,
                 'port': port,
-                'db_name': db_name,
+                'db_name': "mysql",
                 'user': user,
                 'password': password,
                 'charset': 'utf8mb4'
