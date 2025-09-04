@@ -4,7 +4,7 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QFormLayout, QLineEdit, QPushButton,
     QFileDialog, QGroupBox, QHBoxLayout, QTabWidget,
-    QRadioButton, QLabel, QSpinBox, QMessageBox
+    QRadioButton, QLabel, QSpinBox, QMessageBox, QComboBox
 )
 
 from config import settings
@@ -31,6 +31,11 @@ class SystemSettings(QWidget):
         self.system_config_widget = QWidget()
         self.init_system_config_tab()
         self.tab_widget.addTab(self.system_config_widget, "系统配置")
+
+        # 日志配置标签页
+        self.log_config_widget = QWidget()
+        self.init_log_config_tab()
+        self.tab_widget.addTab(self.log_config_widget, "日志配置")
 
         # 提醒配置标签页（所有用户可见）
         self.reminder_config_widget = QWidget()
@@ -154,6 +159,11 @@ class SystemSettings(QWidget):
         if directory:
             self.file_server_dir_edit.setText(directory)
 
+    def select_log_directory(self):
+        directory = QFileDialog.getExistingDirectory(self, '选择日志保存目录', os.getcwd())
+        if directory:
+            self.log_dir_edit.setText(directory)
+
     def toggle_server_mode(self):
         # 根据选择的服务器模式启用/禁用相应的配置项
         is_remote = self.remote_server_radio.isChecked()
@@ -167,6 +177,75 @@ class SystemSettings(QWidget):
         # 远程服务器配置
         self.remote_host_edit.setEnabled(is_remote)
         self.remote_port_edit.setEnabled(is_remote)
+
+    def init_log_config_tab(self):
+        """初始化日志配置标签页"""
+        # 创建日志配置标签页的布局
+        log_layout = QVBoxLayout(self.log_config_widget)
+
+        # 日志配置说明
+        log_info = QLabel("配置系统日志的存储位置、级别和清理策略")
+        log_info.setStyleSheet('color: #666; font-size: 12px; margin-bottom: 10px;')
+        log_layout.addWidget(log_info)
+
+        # 日志配置组
+        log_group = QGroupBox('日志设置')
+        log_form_layout = QFormLayout()
+
+        # 日志目录选择
+        self.log_dir_edit = QLineEdit()
+        self.log_dir_edit.setPlaceholderText('请选择日志文件保存目录')
+        self.log_dir_edit.setReadOnly(True)
+        self.select_log_dir_button = QPushButton('选择目录')
+        self.select_log_dir_button.clicked.connect(self.select_log_directory)
+        
+        dir_layout = QHBoxLayout()
+        dir_layout.addWidget(self.log_dir_edit)
+        dir_layout.addWidget(self.select_log_dir_button)
+        log_form_layout.addRow('日志目录:', dir_layout)
+
+        # 日志级别选择
+        self.log_level_combo = QComboBox()
+        self.log_level_combo.addItems(['调试', '信息', '警告', '错误', '严重'])
+        self.log_level_combo.setCurrentText('信息')
+        self.log_level_combo.setToolTip('选择日志的详细程度：调试(最详细) → 严重(最简洁)')
+        
+        level_label = QLabel('日志级别:')
+        level_label.setToolTip('控制日志的详细程度')
+        log_form_layout.addRow(level_label, self.log_level_combo)
+
+        # 日志保留天数
+        self.log_days_spinbox = QSpinBox()
+        self.log_days_spinbox.setRange(1, 365)
+        self.log_days_spinbox.setValue(7)
+        self.log_days_spinbox.setSuffix(' 天')
+        self.log_days_spinbox.setToolTip('超过此天数的日志文件将被自动清理')
+        
+        days_label = QLabel('保留天数:')
+        days_label.setToolTip('日志文件自动清理的周期')
+        log_form_layout.addRow(days_label, self.log_days_spinbox)
+
+        log_group.setLayout(log_form_layout)
+        log_layout.addWidget(log_group)
+
+        # 日志信息提示
+        log_hint = QLabel(
+            '💡 提示：\n'
+            '• 修改日志配置后需要重启应用程序才能生效\n'
+            '• 建议选择有足够磁盘空间的目录\n'
+            '• 生产环境建议使用INFO级别，调试时可使用DEBUG级别'
+        )
+        log_hint.setStyleSheet('color: #666; font-size: 11px; background-color: #f9f9f9; padding: 10px; border-radius: 5px;')
+        log_hint.setWordWrap(True)
+        log_layout.addWidget(log_hint)
+
+        # 添加保存按钮
+        save_log_button = QPushButton('保存日志配置')
+        save_log_button.clicked.connect(self.save_log_config)
+        log_layout.addWidget(save_log_button, alignment=QtCore.Qt.AlignCenter)
+
+        # 加载现有日志配置
+        self.load_log_config()
 
     def init_reminder_config_tab(self):
         """初始化提醒配置标签页"""
@@ -213,32 +292,51 @@ class SystemSettings(QWidget):
         self.load_reminder_config()
 
     def load_config(self):
-        # 从配置文件加载数据库配置
-        db_config = settings.DB_CONFIG
-        self.db_config_host.setText(db_config.get('host', '127.0.0.1'))
-        self.db_config_port.setText(str(db_config.get('port', 3306)))
-        self.db_config_db_name.setText(db_config.get('db_name', settings.default_db_name))
-        self.db_config_user.setText(db_config.get('user', 'root'))
-        self.db_config_password.setText(db_config.get('password', ''))
+        """加载现有配置"""
+        try:
+            # 加载数据库配置
+            db_config = settings.DB_CONFIG
+            self.db_config_host.setText(str(db_config.get('host', 'localhost')))
+            self.db_config_port.setText(str(db_config.get('port', 3306)))
+            self.db_config_db_name.setText(str(db_config.get('db_name', 'research_project')))
+            self.db_config_user.setText(str(db_config.get('user', 'root')))
+            self.db_config_password.setText(str(db_config.get('password', '')))
 
-        # 服务器模式
-        remote_server = settings.FILE_SERVER_CONFIG.get('remote_server', False)
-        if remote_server:
-            self.remote_server_radio.setChecked(True)
-        else:
-            self.local_server_radio.setChecked(True)
+            # 加载文件服务器配置
+            file_server_config = settings.FILE_SERVER_CONFIG
+            is_remote = file_server_config.get('remote_server', False)
+            self.local_server_radio.setChecked(not is_remote)
+            self.remote_server_radio.setChecked(is_remote)
+            self.local_port_edit.setText(str(file_server_config.get('port', 5001)))
+            self.remote_host_edit.setText(str(file_server_config.get('remote_host', '')))
+            self.remote_port_edit.setText(str(file_server_config.get('remote_port', 5001)))
+            self.file_server_dir_edit.setText(str(file_server_config.get('root_dir', '')))
 
-        # 本地服务器配置
-        self.local_host_edit.setText(pod_ip)
-        self.local_port_edit.setText(str(settings.FILE_SERVER_CONFIG.get('port', 5001)))
+            self.toggle_server_mode()
 
-        # 远程服务器配置
-        self.remote_host_edit.setText(settings.FILE_SERVER_CONFIG.get('remote_host', ''))
-        self.remote_port_edit.setText(str(settings.FILE_SERVER_CONFIG.get('remote_port', 5001)))
+        except Exception as e:
+            logger.error(f"加载配置时发生错误: {e}")
+            QMessageBox.warning(self, '错误', f'加载配置时发生错误: {e}')
 
-        # 文件存储目录
-        root_dir = settings.FILE_SERVER_CONFIG.get('root_dir', '')
-        self.file_server_dir_edit.setText(root_dir)
+    def load_log_config(self):
+        """加载日志配置"""
+        try:
+            # 加载日志配置
+            log_config = settings.LOG_CONFIG
+            
+            self.log_dir_edit.setText(str(log_config.get('log_dir', 'C:\\research_project\\log')))
+            
+            # 将日志级别字符串转换为中文显示
+            log_level_map = {'DEBUG': '调试', 'INFO': '信息', 'WARNING': '警告', 'ERROR': '错误', 'CRITICAL': '严重'}
+            log_level_str = str(log_config.get('log_level', 'INFO'))
+            chinese_level = log_level_map.get(log_level_str, '信息')
+            self.log_level_combo.setCurrentText(chinese_level)
+            
+            self.log_days_spinbox.setValue(int(log_config.get('max_days', 7)))
+
+        except Exception as e:
+            logger.error(f"加载日志配置时发生错误: {e}")
+            QMessageBox.warning(self, '错误', f'加载日志配置时发生错误: {e}')
 
     def test_database_connection(self):
         """测试数据库连接"""
@@ -388,37 +486,61 @@ class SystemSettings(QWidget):
             logger.error(f"加载提醒配置时发生错误: {e}")
 
     def save_config(self):
-        settings_config = {}
-        # 保存数据库配置
-        db_config = {
-            'host': self.db_config_host.text(),
-            'port': int(self.db_config_port.text()) if self.db_config_port.text().isdigit() else 3306,
-            'db_name': self.db_config_db_name.text(),
-            'user': self.db_config_user.text(),
-            'password': self.db_config_password.text()
-        }
-        settings_config['database'] = db_config
+        """保存配置"""
+        try:
+            # 收集数据库配置
+            db_config = {
+                'host': self.db_config_host.text().strip(),
+                'port': int(self.db_config_port.text().strip() or 3306),
+                'db_name': self.db_config_db_name.text().strip(),
+                'user': self.db_config_user.text().strip(),
+                'password': self.db_config_password.text().strip()
+            }
 
-        # 保存文件服务器配置
-        file_server_config = {
-            'enabled': True,  # 始终启用
-            'remote_server': self.remote_server_radio.isChecked(),
-            'host': "0.0.0.0",
-            'port': int(self.local_port_edit.text()) if self.local_port_edit.text().isdigit() else 5001,
-            'remote_host': self.remote_host_edit.text(),
-            'remote_port': int(self.remote_port_edit.text()) if self.remote_port_edit.text().isdigit() else 5001,
-            'root_dir': self.file_server_dir_edit.text()
-        }
-        settings_config["file_server"] = file_server_config
+            # 收集文件服务器配置
+            file_server_config = {
+                'enabled': True,
+                'remote_server': self.remote_server_radio.isChecked(),
+                'host': "0.0.0.0",
+                'port': int(self.local_port_edit.text().strip() or 5001),
+                'remote_host': self.remote_host_edit.text().strip(),
+                'remote_port': int(self.remote_port_edit.text().strip() or 5001),
+                'root_dir': self.file_server_dir_edit.text().strip()
+            }
 
-        # 使用新的备份保存函数
-        from config.settings import save_config_with_backup
-        save_config_with_backup('config.json', settings_config)
+            # 保存配置
+            settings.save_config_with_backup('config.json', {
+                'database': db_config,
+                'file_server': file_server_config
+            })
 
-        # 提示用户配置已保存
-        from PyQt5.QtWidgets import QMessageBox
-        QMessageBox.information(self, '配置保存成功',
-                                '文件服务器配置保存成功，已同步备份到C:\\research_project\\config目录，需重启应用程序生效。')
+            QMessageBox.information(self, '成功', '配置保存成功！\n重启应用程序后生效。')
+
+        except ValueError as e:
+            QMessageBox.warning(self, '错误', f'端口格式错误: {e}')
+        except Exception as e:
+            QMessageBox.warning(self, '错误', f'保存配置时发生错误: {e}')
+
+    def save_log_config(self):
+        """保存日志配置"""
+        try:
+            # 收集日志配置
+            log_level_map = {'调试': 'DEBUG', '信息': 'INFO', '警告': 'WARNING', '错误': 'ERROR', '严重': 'CRITICAL'}
+            log_config = {
+                'log_dir': self.log_dir_edit.text().strip() or 'C:\\research_project\\log',
+                'log_level': log_level_map.get(self.log_level_combo.currentText(), 'INFO'),
+                'max_days': self.log_days_spinbox.value()
+            }
+
+            # 保存配置
+            settings.save_config_with_backup('config.json', {
+                'log_config': log_config
+            })
+
+            QMessageBox.information(self, '成功', '日志配置保存成功！\n重启应用程序后生效。')
+
+        except Exception as e:
+            QMessageBox.critical(self, '保存失败', f'保存日志配置时发生错误：{str(e)}')
 
     def save_reminder_config(self):
         """保存提醒配置"""

@@ -37,12 +37,24 @@ class ProjectLogger:
         """设置日志记录器
         
         Args:
-            log_dir: 日志文件保存目录，默认为程序目录下的logs文件夹
+            log_dir: 日志文件保存目录，默认为C:\research_project\log
             log_level: 日志级别，默认为INFO
         """
         if log_dir is None:
-            # 默认日志目录为程序根目录下的logs文件夹
+            # 使用配置文件中的日志目录，默认为C:\research_project\log
+            try:
+                from config.settings import LOG_CONFIG
+                log_dir = LOG_CONFIG.get('log_dir', 'C:\\research_project\\log')
+            except ImportError:
+                log_dir = 'C:\\research_project\\log'
+        
+        # 确保日志目录存在
+        try:
+            os.makedirs(log_dir, exist_ok=True)
+        except PermissionError:
+            # 如果C盘目录无权限，回退到程序目录
             log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+            os.makedirs(log_dir, exist_ok=True)
 
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)

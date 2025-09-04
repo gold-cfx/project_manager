@@ -1,4 +1,9 @@
 {
+  "log_config": {
+    "log_dir": "C:/Users/USER/Documents",
+    "log_level": "INFO",
+    "max_days": 5
+  },
   "database": {
     "host": "127.0.0.1",
     "port": 3306,
@@ -9,10 +14,10 @@
   "file_server": {
     "enabled": true,
     "host": "192.168.103.89",
-    "port": 5008,
-    "root_dir": "C:\\research_project\\attachments",
+    "port": 5002,
+    "root_dir": "C:\\Users\\USER\\Documents\\ResearchProject\\attachments",
     "remote_server": false,
-    "remote_host": "127.0.0.1",
-    "remote_port": 5008
+    "remote_host": "",
+    "remote_port": 5001
   }
 }

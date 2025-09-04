@@ -70,18 +70,32 @@ def load_config_with_backup(filename):
 
 def save_config_with_backup(filename, config_data):
     """
-    保存配置文件到本地和备份目录
+    保存配置文件到本地和备份目录，支持部分更新
     
     Args:
         filename: 配置文件名
-        config_data: 配置数据
+        config_data: 配置数据（可以是部分配置）
     """
+    # 先加载现有配置
+    existing_config = load_config_with_backup(filename)
+    
+    # 合并配置数据（避免覆盖未修改的部分）
+    def deep_merge(dict1, dict2):
+        """深度合并两个字典"""
+        for key, value in dict2.items():
+            if key in dict1 and isinstance(dict1[key], dict) and isinstance(value, dict):
+                deep_merge(dict1[key], value)
+            else:
+                dict1[key] = value
+    
+    deep_merge(existing_config, config_data)
+    
     # 保存到本地配置目录
     local_path = os.path.join(config_dir, filename)
     try:
         os.makedirs(os.path.dirname(local_path), exist_ok=True)
         with open(local_path, 'w', encoding='utf-8') as f:
-            json.dump(config_data, f, ensure_ascii=False, indent=2)
+            json.dump(existing_config, f, ensure_ascii=False, indent=2)
     except Exception as e:
         logger.error(f"保存本地配置文件 {local_path} 时发生错误: {e}")
 
@@ -90,7 +104,7 @@ def save_config_with_backup(filename, config_data):
     try:
         os.makedirs(os.path.dirname(backup_path), exist_ok=True)
         with open(backup_path, 'w', encoding='utf-8') as f:
-            json.dump(config_data, f, ensure_ascii=False, indent=2)
+            json.dump(existing_config, f, ensure_ascii=False, indent=2)
     except Exception as e:
         logger.error(f"保存备份配置文件 {backup_path} 时发生错误: {e}")
 
@@ -123,7 +137,7 @@ SYSTEM_CONFIG = {
 }
 
 
-# 获取安全的默认目录
+# 使用安全的默认目录
 def get_safe_default_directory():
     """获取用户有权限的安全默认存储目录"""
     try:
@@ -150,8 +164,20 @@ def get_safe_default_directory():
         return "C:\\research_project\\attachments"
 
 
+def get_default_log_directory():
+    """获取默认日志目录"""
+    try:
+        log_dir = "C:\\research_project\\log"
+        os.makedirs(log_dir, exist_ok=True)
+        return log_dir
+    except Exception:
+        return os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+
+
 # 使用安全的默认目录
 DEFAULT_ROOT_DIR = get_safe_default_directory()
+DEFAULT_LOG_DIR = get_default_log_directory()
+
 FILE_SERVER_CONFIG = {
     "enabled": True,
     "host": "127.0.0.1",
@@ -163,5 +189,14 @@ FILE_SERVER_CONFIG = {
 }
 if 'file_server' in config:
     FILE_SERVER_CONFIG.update({k: v for k, v in config['file_server'].items() if not (v is None or v == "")})
+
+LOG_CONFIG = {
+    "log_dir": DEFAULT_LOG_DIR,
+    "log_level": "INFO",
+    "max_days": 7
+}
+if 'log_config' in config:
+    LOG_CONFIG.update({k: v for k, v in config['log_config'].items() if not (v is None or v == "")})
+
 ICON_PATH = os.path.join(get_icon_path(), "icon.ico")
 QSS_PATH = os.path.join(get_icon_path(), "styles.qss")
