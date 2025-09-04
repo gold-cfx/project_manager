@@ -7,6 +7,9 @@ from PyQt5.QtWidgets import QLabel, QMessageBox, QPushButton, QFileDialog
 
 from ui.data_editor import ProjectEditor
 from utils.excel_handler import ExcelTemplateGenerator, ExcelImporter
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class ProjectRegistration(ProjectEditor):
@@ -167,7 +170,7 @@ class ProjectRegistration(ProjectEditor):
 
                 except Exception as e:
                     error_count += 1
-                    print(f"导入项目失败: {str(e)}")
+                    logger.error(f"导入项目失败: {str(e)}")
                     continue
 
             # 显示导入结果

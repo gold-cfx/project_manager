@@ -156,8 +156,8 @@ class FileServer:
         if port is None:
             port = file_server_config.port
 
-        print(f"文件服务器启动于 http://{host}:{port}")
-        print(f"文件存储目录: {self.root_dir}")
+        logger.info(f"文件服务器启动于 http://{host}:{port}")
+        logger.info(f"文件存储目录: {self.root_dir}")
 
         # 启动Flask服务器
         self.app.run(host=host, port=port, debug=debug, threaded=True)

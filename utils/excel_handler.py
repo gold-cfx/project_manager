@@ -13,6 +13,9 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.worksheet.datavalidation import DataValidation
 
 from utils.dict_utils import dict_utils
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 column_widths = [25, 15, 15, 15, 20, 25, 15, 18, 20, 15, 20, 15, 18, 18]
 
@@ -128,7 +131,7 @@ class ExcelTemplateGenerator:
             return True
 
         except Exception as e:
-            print(f"生成模板失败: {str(e)}")
+            logger.error(f"生成模板失败: {str(e)}")
             return False
 
 
@@ -177,13 +180,13 @@ class ExcelImporter:
                     }
                     projects.append(project_data)
                 except Exception as e:
-                    print(f"处理行数据失败: {str(e)}")
+                    logger.warning(f"处理行数据失败: {str(e)}")
                     continue
 
             return projects
 
         except Exception as e:
-            print(f"导入Excel失败: {str(e)}")
+            logger.error(f"导入Excel失败: {str(e)}")
             raise
 
 
@@ -259,5 +262,5 @@ class ExcelExporter:
             return True
 
         except Exception as e:
-            print(f"导出Excel失败: {str(e)}")
+            logger.error(f"导出Excel失败: {str(e)}")
             return False

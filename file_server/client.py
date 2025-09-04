@@ -8,6 +8,9 @@ from typing import Optional, Dict, Any
 import requests
 
 from file_server.config import file_server_config
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class FileServerClient:
@@ -101,11 +104,11 @@ class FileServerClient:
                     f.write(chunk)
 
             return True, ""
-        except requests.RequestException as e:
-            print(f"下载失败: {str(e)}")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"下载失败: {str(e)}")
             return False, str(e)
         except Exception as e:
-            print(f"下载失败: {str(e)}")
+            logger.error(f"下载失败: {str(e)}")
             return False, str(e)
 
     def delete_file(self, file_path: str) -> Dict[str, Any]:
@@ -130,7 +133,7 @@ class FileServerClient:
                 'message': '文件删除成功'
             }
         except Exception as e:
-            print(f"文件删除失败: {str(e)}")
+            logger.error(f"文件删除失败: {str(e)}")
             return {'success': False, 'message': str(e)}
 
     def check_file_exists(self, file_path: str) -> bool:
@@ -152,7 +155,7 @@ class FileServerClient:
             result = response.json()
             return result.get('exists', False)
         except Exception as e:
-            print(f"检查文件存在失败: {str(e)}")
+            logger.error(f"文件删除失败: {str(e)}")
             return False
 
     def get_server_status(self) -> Optional[Dict[str, Any]]:
@@ -172,7 +175,7 @@ class FileServerClient:
             result['mode'] = 'remote'
             return result
         except Exception as e:
-            print(f"获取服务器状态失败: {str(e)}")
+            logger.error(f"获取服务器状态失败: {str(e)}")
             return None
 
     def _get_directory_size(self, path):

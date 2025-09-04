@@ -17,6 +17,9 @@ from file_server.start_server import start_file_server
 from logic.auto_reminder import auto_reminder
 from ui.login_dialog import LoginDialog
 from ui.main_window import MainWindow
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 # 解决任务栏图标不显示问题
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("ccp")
@@ -56,8 +59,9 @@ def main():
             # 启动文件服务器
             try:
                 start_file_server()
+                logger.info("文件服务器启动成功")
             except Exception as e:
-                print(f"文件服务器启动失败: {str(e)}")
+                logger.error(f"文件服务器启动失败: {str(e)}")
             # 设置主窗口引用并初始化定时提醒
             main_window = MainWindow(current_user)
             main_window.show()
@@ -65,7 +69,7 @@ def main():
             auto_reminder.initialize_timer()
         else:
             # 隐藏管理员跳过所有初始化和提醒
-            print("隐藏管理员登录，跳过数据初始化和提醒扫描")
+            logger.info("隐藏管理员登录，跳过数据初始化和提醒扫描")
             main_window = MainWindow(current_user)
             main_window.show()
 

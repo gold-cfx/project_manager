@@ -18,6 +18,9 @@ from logic.project_result_attachment_logic import ProjectResultAttachmentLogic
 from logic.project_result_logic import ProjectResultLogic
 from utils.dict_utils import dict_utils
 from utils.validator import Validator
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class ResultDialog(QDialog):
@@ -238,7 +241,7 @@ class BaseProjectEditor(object):
         self.widget = None  # 存储UI组件的引用
         self.project_result_logic = ProjectResultLogic()
 
-        print(f'创建BaseProjectEditor实例，项目ID: {project_id}')
+        logger.info(f'创建BaseProjectEditor实例，项目ID: {project_id}')
 
     def init_ui(self, widget):
         """初始化UI，需要由子类提供widget"""
@@ -907,7 +910,7 @@ class BaseProjectEditor(object):
 
     def sub_cancel(self):
         """取消操作，由子类实现具体行为"""
-        print("执行取消（父）")
+        logger.info("执行取消（父）")
         pass
 
     def on_cancel(self):
@@ -935,9 +938,9 @@ class ProjectEditor(QWidget):
                 self.base_editor.load_project_data(project_id)
 
             self.base_editor.sub_cancel = self.hide
-            print('ProjectEditor初始化完成')
+            logger.info('ProjectEditor初始化完成')
         except Exception as e:
-            print(f'ProjectEditor初始化出错: {str(e)}')
+            logger.error(f'ProjectEditor初始化出错: {str(e)}')
             QMessageBox.critical(self, '错误', f'编辑器初始化出错: {str(e)}')
 
     def show(self):
@@ -967,9 +970,9 @@ class ProjectEditorDialog(QDialog):
 
             self.base_editor.sub_cancel = self.reject
             self.base_editor.accept = self.accept
-            print('ProjectEditorDialog初始化完成')
+            logger.info('ProjectEditorDialog初始化完成')
         except Exception as e:
-            print(f'ProjectEditorDialog初始化出错: {str(e)}')
+            logger.error(f'ProjectEditorDialog初始化出错: {str(e)}')
             QMessageBox.critical(self, '错误', f'编辑器初始化出错: {str(e)}')
 
     def accept(self):
@@ -978,7 +981,7 @@ class ProjectEditorDialog(QDialog):
 
     def reject(self):
         """重写reject方法，取消操作"""
-        print("执行取消")
+        logger.info("执行取消")
         super().reject()
 
     def exec_(self):

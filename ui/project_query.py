@@ -19,9 +19,11 @@ from logic.project_logic import ProjectLogic
 from logic.query_logic import QueryLogic
 from ui.chart_dialog import ChartDialog
 from ui.data_editor import ProjectEditorDialog
+from utils.logger import get_logger
 
 # 动态导入其他对话框，避免循环依赖
 
+logger = get_logger(__name__)
 
 # 设置中文字体
 plt.rcParams["font.family"] = ["SimHei", "WenQuanYi Micro Hei", "Heiti TC"]
@@ -611,7 +613,7 @@ class ProjectQuery(QWidget):
                     result = editor.exec_()
 
                 except Exception as e:
-                    print(f'创建项目编辑对话框时出错: {str(e)}')
+                    logger.error(f'创建项目编辑对话框时出错: {str(e)}')
                     QMessageBox.critical(self, '错误', f'创建项目编辑对话框时出错: {str(e)}')
             else:
                 QMessageBox.warning(self, '错误', '无法获取项目ID')
@@ -654,7 +656,7 @@ class ProjectQuery(QWidget):
                             fail_count += 1
                 QMessageBox.information(self, '批量添加结果', f'成功添加{success_count}个提醒，失败{fail_count}个')
         except Exception as e:
-            print(f'打开提醒对话框时出错: {str(e)}')
+            logger.error(f'打开提醒对话框时出错: {str(e)}')
             QMessageBox.critical(self, '错误', f'打开提醒对话框时出错: {str(e)}')
 
     def batch_delete(self):
@@ -683,7 +685,7 @@ class ProjectQuery(QWidget):
                 # 重新查询以更新结果
                 self.query_projects()
             except Exception as e:
-                print(f'批量删除项目时出错: {str(e)}')
+                logger.error(f'批量删除项目时出错: {str(e)}')
                 QMessageBox.critical(self, '错误', f'批量删除项目时出错: {str(e)}')
 
     def export_results(self):

@@ -11,6 +11,9 @@ from pymysql.cursors import Cursor, DictCursor
 
 from data.db_connection import with_db_connection
 from models.user import User, UserCreate, UserUpdate
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class UserDAO:
@@ -47,7 +50,7 @@ class UserDAO:
             ))
             return cursor.lastrowid
         except Exception as e:
-            print(f"创建用户失败: {e}")
+            logger.error(f"创建用户失败: {e}")
             return None
 
     @staticmethod
@@ -166,7 +169,7 @@ class UserDAO:
             cursor.execute(sql, values)
             return cursor.rowcount > 0
         except Exception as e:
-            print(f"更新用户失败: {e}")
+            logger.error(f"更新用户失败: {e}")
             return False
 
     @staticmethod
@@ -186,7 +189,7 @@ class UserDAO:
             cursor.execute(sql, (user_id,))
             return cursor.rowcount > 0
         except Exception as e:
-            print(f"删除用户失败: {e}")
+            logger.error(f"删除用户失败: {e}")
             return False
 
     @staticmethod
@@ -334,5 +337,5 @@ class UserDAO:
             cursor.execute(sql, (hashed_password, username))
             return cursor.rowcount > 0
         except Exception as e:
-            print(f"修改密码失败: {e}")
+            logger.error(f"修改密码失败: {e}")
             return False

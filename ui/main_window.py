@@ -273,7 +273,6 @@ class MainWindow(QMainWindow):
         # 设置图标路径 - 使用统一的图标文件
         if os.path.exists(ICON_PATH):
             tray_icon = QIcon(ICON_PATH)
-            print(f"user icon: {ICON_PATH}")
         else:
             tray_icon = self.style().standardIcon(self.style().SP_ComputerIcon)
 

@@ -11,6 +11,9 @@ from pymysql.cursors import DictCursor
 
 from config.settings import DB_CONFIG
 from utils.decorators import format_datetime_in_result
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class DatabaseConnection:
@@ -42,9 +45,8 @@ class DatabaseConnection:
                     charset=self.config['charset'],
                     cursorclass=DictCursor
                 )
-                print(f"数据库连接成功: {self.config['host']}:{self.config.get('port', 3306)}")
             except Exception as e:
-                print(f"数据库连接失败: {e}")
+                logger.error(f"数据库连接失败: {e}")
                 self._connection = None
         return self._connection
 
@@ -53,7 +55,7 @@ class DatabaseConnection:
         if self._connection and self._connection.open:
             self._connection.close()
             self._connection = None
-            print("数据库连接已关闭")
+            logger.info("数据库连接已关闭")
 
     def get_connection(self):
         """获取数据库连接"""
@@ -101,7 +103,7 @@ def with_db_connection(cursor_type=DictCursor, commit=True):
                     conn.commit()
                 return result
             except Exception as e:
-                print(f"数据库操作失败: {e}")
+                logger.error(f"数据库操作失败: {e}")
                 if conn: conn.rollback()
                 return None
             finally:
@@ -137,7 +139,7 @@ def with_db_connection_old(operation, cursor_type=DictCursor, commit=True):
                 conn.commit()
             return result
         except Exception as e:
-            print(f"数据库操作失败: {e}")
+            logger.error(f"数据库操作失败: {e}")
             if conn: conn.rollback()
             return None
         finally:
@@ -151,7 +153,7 @@ def init_database():
     """初始化数据库"""
     conn = get_connection()
     if not conn:
-        print("无法连接到数据库，初始化失败")
+        logger.error("无法连接到数据库，初始化失败")
         return False
 
     cursor = conn.cursor()
@@ -297,11 +299,11 @@ def init_database():
         cursor.execute(create_default_admin, (admin_password,))
 
         conn.commit()
-        print("数据库初始化成功")
+        logger.info("数据库初始化成功")
         return True
     except Exception as e:
         if conn: conn.rollback()
-        print(f"数据库初始化失败: {e}")
+        logger.error(f"数据库初始化失败: {e}")
         return False
     finally:
         if cursor: cursor.close()

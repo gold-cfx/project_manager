@@ -9,6 +9,9 @@ from typing import List, Optional, Dict, Any
 from data.project_result_dao import ProjectResultDAO
 from models.project_result import ProjectResult, ProjectResultCreate, ProjectResultUpdate
 from utils.decorators import validate_model_data, log_operation
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class ProjectResultLogic:
@@ -121,8 +124,8 @@ class ProjectResultLogic:
                     result_data['id'] = result_id
                     saved_results.append(result_data)
                 else:
-                    print(f"创建项目成果失败，ID返回0或负数: {result_data.get('name')}")
+                    logger.error(f"创建项目成果失败，ID返回0或负数: {result_data.get('name')}")
             except Exception as e:
-                print(f"创建项目成果失败: {e}")
+                    logger.error(f"创建项目成果失败: {e}")
 
         return saved_results

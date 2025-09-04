@@ -13,6 +13,9 @@ from PyQt5.QtWidgets import QMessageBox
 from config.settings import config_dir, BACKUP_CONFIG_DIR
 from logic.reminder_logic import ReminderLogic
 from models.reminder import Reminder
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class AutoReminder(QObject):
@@ -52,7 +55,7 @@ class AutoReminder(QObject):
             # 优先加载备份目录的配置
             backup_path = os.path.join(BACKUP_CONFIG_DIR, 'reminder_config.json')
             config_path = os.path.join(config_dir, 'reminder_config.json')
-            
+
             if os.path.exists(backup_path):
                 config_path = backup_path
             elif not os.path.exists(config_path):
@@ -60,12 +63,12 @@ class AutoReminder(QObject):
                 self.reminder_interval_hours = 1
                 self.save_timer_config()
                 return
-                
+
             with open(config_path, 'r', encoding='utf-8') as f:
                 config = json.load(f)
                 self.reminder_interval_hours = config.get('reminder_interval_hours', 1)
         except Exception as e:
-            print(f"加载提醒配置时发生错误: {e}")
+            logger.error(f"加载提醒配置时发生错误: {e}")
             self.reminder_interval_hours = 1
 
     def save_timer_config(self):
@@ -73,29 +76,29 @@ class AutoReminder(QObject):
         try:
             os.makedirs(config_dir, exist_ok=True)
             os.makedirs(BACKUP_CONFIG_DIR, exist_ok=True)
-            
+
             config = {
                 'reminder_interval_hours': self.reminder_interval_hours
             }
-            
+
             # 保存到本地配置目录
             config_path = os.path.join(config_dir, 'reminder_config.json')
             with open(config_path, 'w', encoding='utf-8') as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
-            
+
             # 保存到备份目录
             backup_path = os.path.join(BACKUP_CONFIG_DIR, 'reminder_config.json')
             with open(backup_path, 'w', encoding='utf-8') as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
-                
+
         except Exception as e:
-            print(f"保存提醒配置时发生错误: {e}")
+            logger.error(f"保存提醒配置时发生错误: {e}")
 
     def start_timer(self):
         """启动定时器"""
         interval_ms = self.reminder_interval_hours * 60 * 60 * 1000  # 转换为毫秒
         self.timer.start(interval_ms)
-        print(f"定时提醒已启动，每{self.reminder_interval_hours}小时检查一次")
+        logger.info(f"定时提醒已启动，每{self.reminder_interval_hours}小时检查一次")
 
     def stop_timer(self):
         """停止定时器"""

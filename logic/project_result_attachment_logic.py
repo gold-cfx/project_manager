@@ -16,6 +16,9 @@ from models.project_result_attachment import (
     ProjectResultAttachmentCreate,
     ProjectResultAttachmentUpdate
 )
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class ProjectResultAttachmentLogic:
@@ -131,7 +134,7 @@ class ProjectResultAttachmentLogic:
                 )
                 temp_client.delete_file(old_attachment['file_path'])
             except Exception as e:
-                print(f"删除旧附件失败: {str(e)}")
+                logger.warning(f"删除旧附件失败: {str(e)}")
                 pass  # 忽略删除旧文件时的错误
 
         return success
@@ -171,7 +174,8 @@ class ProjectResultAttachmentLogic:
                     root_dir=attachment.get('file_storage_directory', '')
                 )
                 temp_client.delete_file(attachment['file_path'])
-            except Exception:
+            except Exception as e:
+                logger.warning(f"删除附件文件失败: {str(e)}")
                 pass  # 忽略文件删除错误
 
         return success
@@ -211,7 +215,7 @@ class ProjectResultAttachmentLogic:
                     )
                     temp_client.delete_file(attachment['file_path'])
                 except Exception as e:
-                    print(f"删除附件失败: {str(e)}")
+                    logger.warning(f"删除附件失败: {str(e)}")
                     pass  # 忽略文件删除错误
 
         return success
@@ -241,24 +245,24 @@ class ProjectResultAttachmentLogic:
 
             # 先使用相同的临时客户端检查文件是否存在
             if not temp_client.check_file_exists(attachment['file_path']):
-                print(f"附件文件在数据库配置的文件服务器上不存在: {attachment['file_path']}")
+                logger.warning(f"附件文件在数据库配置的文件服务器上不存在: {attachment['file_path']}")
 
                 # 使用当前系统配置的文件服务再试一次
-                print(f"尝试使用当前系统配置的文件服务下载附件: {attachment['file_path']}")
+                logger.info(f"尝试使用当前系统配置的文件服务下载附件: {attachment['file_path']}")
                 # 使用全局的file_server_client，它使用当前系统配置
                 success, error = file_server_client.download_file(attachment['file_path'], save_dir)
                 if success:
-                    print(f"使用系统配置的文件服务下载附件成功")
+                    logger.info("使用系统配置的文件服务下载附件成功")
                     return success
                 else:
-                    print(f"使用系统配置的文件服务下载附件失败: {error}")
+                    logger.error(f"使用系统配置的文件服务下载附件失败: {error}")
                     return False
 
             # 文件存在，执行下载
             success, error = temp_client.download_file(attachment['file_path'], save_dir)
             return success
         except Exception as e:
-            print(f"下载附件失败: {str(e)}")
+            logger.error(f"下载附件失败: {str(e)}")
             return False
 
     def check_attachment_exists(self, attachment_id: int) -> bool:
@@ -284,5 +288,5 @@ class ProjectResultAttachmentLogic:
             )
             return temp_client.check_file_exists(attachment['file_path'])
         except Exception as e:
-            print(f"检查附件存在失败: {str(e)}")
+            logger.error(f"检查附件存在失败: {str(e)}")
             return False

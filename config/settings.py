@@ -10,7 +10,10 @@ import socket
 # 确保datetime模块被导入
 from datetime import datetime
 
+from utils.logger import get_logger
 from utils.resource_path import get_config_path, get_icon_path
+
+logger = get_logger(__name__)
 
 pod_ip = socket.gethostbyname(socket.gethostname())
 
@@ -62,8 +65,8 @@ def load_config_with_backup(filename):
         else:
             return {}
     except Exception as e:
-        print(f"加载配置文件 {config_file} 时发生错误: {e}")
-        return {}
+            logger.error(f"加载配置文件 {config_file} 时发生错误: {e}")
+            return {}
 
 
 def save_config_with_backup(filename, config_data):
@@ -81,8 +84,8 @@ def save_config_with_backup(filename, config_data):
         with open(local_path, 'w', encoding='utf-8') as f:
             json.dump(config_data, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        print(f"保存本地配置文件 {local_path} 时发生错误: {e}")
-    
+        logger.error(f"保存本地配置文件 {local_path} 时发生错误: {e}")
+
     # 保存到备份配置目录
     backup_path = os.path.join(BACKUP_CONFIG_DIR, filename)
     try:
@@ -90,7 +93,7 @@ def save_config_with_backup(filename, config_data):
         with open(backup_path, 'w', encoding='utf-8') as f:
             json.dump(config_data, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        print(f"保存备份配置文件 {backup_path} 时发生错误: {e}")
+            logger.error(f"保存备份配置文件 {backup_path} 时发生错误: {e}")
 
 
 # 加载配置，支持备份目录优先级

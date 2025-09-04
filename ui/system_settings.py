@@ -9,6 +9,9 @@ from PyQt5.QtWidgets import (
 
 from config import settings
 from config.settings import pod_ip
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class SystemSettings(QWidget):
@@ -382,7 +385,7 @@ class SystemSettings(QWidget):
             from logic.auto_reminder import auto_reminder
             self.reminder_interval_spinbox.setValue(auto_reminder.reminder_interval_hours)
         except Exception as e:
-            print(f"加载提醒配置时发生错误: {e}")
+            logger.error(f"加载提醒配置时发生错误: {e}")
 
     def save_config(self):
         settings_config = {}

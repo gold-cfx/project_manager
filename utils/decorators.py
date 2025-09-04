@@ -5,8 +5,13 @@
 科研项目管理系统 - 装饰器工具
 """
 import functools
+import logging
+from typing import Callable, Any
 
 from models.base import DateTimeFormatterMixin
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def format_datetime_in_result(func):
@@ -71,13 +76,13 @@ def log_operation(operation_name):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            print(f"执行操作: {operation_name}")
+            logger.info(f"执行操作: {operation_name}")
             try:
                 result = func(*args, **kwargs)
-                print(f"操作完成: {operation_name}")
+                logger.info(f"操作完成: {operation_name}")
                 return result
             except Exception as e:
-                print(f"操作失败: {operation_name}, 错误: {e}")
+                logger.error(f"操作失败: {operation_name}, 错误: {e}")
                 raise
 
         return wrapper

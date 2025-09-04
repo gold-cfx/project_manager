@@ -9,6 +9,9 @@ matplotlib.use('Qt5Agg')  # 使用Qt5作为后端
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import os
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class ChartUtils:
@@ -57,7 +60,7 @@ class ChartUtils:
             plt.close()
             return True
         except Exception as e:
-            print(f"导出图表失败: {e}")
+            logger.error(f"导出图表失败: {e}")
             return False
 
     @staticmethod
